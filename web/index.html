@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instagram Manager Pro</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="logo">
+            <i class="fab fa-instagram"></i>
+            <div>
+                <span>INSTAGRAM MANAGER PRO</span>
+                <div class="logo-subtitle">Professional Instagram Automation Tool</div>
+            </div>
+        </div>
+        <div class="user-info">
+            <div class="user-stats">
+                <div class="stat-item">
+                    <i class="fas fa-users"></i> Tài khoản: <strong id="total-accounts">0</strong>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-check-circle"></i> Live: <strong id="live-count">0</strong>
+                </div>
+            </div>
+            <button class="btn btn-login">
+                <i class="fas fa-user"></i> Đăng nhập
+            </button>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Tab Navigation -->
+        <div class="tab-navigation">
+            <button class="tab-btn active" data-tab="manage">
+                <i class="fas fa-list"></i> Quản lý TK Instagram
+            </button>
+            <button class="tab-btn" data-tab="reg">
+                <i class="fas fa-user-plus"></i> Reg TK Instagram
+            </button>
+            <button class="tab-btn" data-tab="nuoi">
+                <i class="fas fa-seedling"></i> Nuôi TK
+            </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="tab-content">
+            <!-- Tab 1: Quản lý TK Instagram -->
+            <div class="tab-pane active" id="manage-tab">
+                <div class="tab-header">
+                    <h2><i class="fas fa-list"></i> QUẢN LÝ TÀI KHOẢN INSTAGRAM</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-success" id="import-btn">
+                            <i class="fas fa-file-import"></i> Import
+                        </button>
+                        <button class="btn btn-danger" id="delete-btn">
+                            <i class="fas fa-trash"></i> Xóa
+                        </button>
+                        <button class="btn btn-primary" id="check-btn">
+                            <i class="fas fa-check"></i> Check Live
+                        </button>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th class="checkbox-col"><input type="checkbox" id="select-all"></th>
+                                <th>STT</th>
+                                <th>Username</th>
+                                <th>Password</th>
+                                <th>Email</th>
+                                <th>Followers</th>
+                                <th>Following</th>
+                                <th>Posts</th>
+                                <th>Status</th>
+                                <th>Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody id="accounts-tbody">
+                            <!-- Data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="bottom-panel">
+                    <div class="panel-section">
+                        <h4><i class="fas fa-chart-bar"></i> Thống kê</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Tổng số:</span>
+                                <span class="info-value" id="stats-total">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Live:</span>
+                                <span class="info-value success" id="stats-live">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Die:</span>
+                                <span class="info-value error" id="stats-die">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Đã chọn:</span>
+                                <span class="info-value" id="stats-selected">0</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 2: Reg TK Instagram -->
+            <!-- Tab 2: Reg TK Instagram -->
+            <div class="tab-pane" id="reg-tab">
+                <div class="tab-header">
+                    <h2><i class="fas fa-user-plus"></i> TẠO TÀI KHOẢN INSTAGRAM</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-success" id="start-reg-btn">
+                            <i class="fas fa-play"></i> Bắt đầu tạo
+                        </button>
+                        <button class="btn btn-danger" id="stop-reg-btn">
+                            <i class="fas fa-stop"></i> Dừng
+                        </button>
+                        <button class="btn btn-info" id="export-reg-btn">
+                            <i class="fas fa-file-export"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                <div class="reg-container">
+                    <!-- TreeView Table -->
+                    <div class="treeview-container">
+                        <div class="treeview-header">
+                            <h4><i class="fas fa-table"></i> Danh sách tài khoản đã tạo</h4>
+                            <button class="btn btn-danger" style="padding: 4px 8px; font-size: 10px;" id="clear-reg-table">
+                                <i class="fas fa-trash"></i> Xóa hết
+                            </button>
+                        </div>
+                        <div class="treeview-content" style="padding: 0; overflow: auto;">
+                            <table class="data-table" id="reg-accounts-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 60px;">STT</th>
+                                        <th style="width: 180px;">Username</th>
+                                        <th style="width: 200px;">Email</th>
+                                        <th style="width: 150px;">Password</th>
+                                        <th style="min-width: 250px;">Cookie</th>
+                                        <th style="width: 100px;">Thao tác</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reg-accounts-tbody">
+                                    <tr>
+                                        <td colspan="6" style="text-align: center; padding: 30px; color: #888;">
+                                            <i class="fas fa-inbox"></i><br>
+                                            Chưa có tài khoản nào được tạo
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Settings Panel -->
+                    <div class="settings-panel">
+                        <div class="settings-header">
+                            <h4><i class="fas fa-cog"></i> Cấu hình</h4>
+                        </div>
+                        <div class="settings-content">
+                            <div class="form-group">
+                                <label><i class="fas fa-hashtag"></i> Số lượng tài khoản cần tạo</label>
+                                <input type="number" class="form-input" id="account-count-input" value="10" min="1" max="100">
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-hashtag"></i> Số lượng luồng</label>
+                                <input type="number" class="form-input" id="account-count-thread-input" value="10" min="1" max="100">
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-clock"></i> Delay giữa các lần tạo (giây)</label>
+                                <input type="number" class="form-input" id="delay-input" value="5" min="1" max="60">
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-key"></i> Mật khẩu mặc định</label>
+                                <input type="text" class="form-input" id="password-input" placeholder="Nhập mật khẩu..." value="Instagram@123">
+                            </div>
+
+                            <!-- PROXY SECTION -->
+                            <div class="form-group">
+                                <label style="display: flex; justify-content: space-between; align-items: center;">
+                                    <span><i class="fas fa-network-wired"></i> Danh sách Proxy</span>
+                                    <span style="font-size: 10px; color: #888;">(Mỗi dòng 1 proxy)</span>
+                                </label>
+                                <textarea 
+                                    class="form-input" 
+                                    id="proxy-list-input" 
+                                    placeholder="host:port:user:pass&#10;sp06v2-03.proxygiare1k.shop:37616:sp06v205-37616:WTLCO&#10;sp06v2-03.proxygiare1k.shop:37615:sp06v205-37615:UAGSL"
+                                    rows="5"
+                                    style="resize: vertical; font-family: 'Courier New', monospace; font-size: 11px;"
+                                ></textarea>
+                                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                    <button class="btn-file" id="import-proxy-btn" style="flex: 1;">
+                                        <i class="fas fa-file-import"></i> Import từ file
+                                    </button>
+                                    <button class="btn-file" id="clear-proxy-btn" style="flex: 1;">
+                                        <i class="fas fa-times"></i> Xóa
+                                    </button>
+                                </div>
+                                <div style="margin-top: 8px; font-size: 10px; color: #888;">
+                                    <i class="fas fa-info-circle"></i> Tổng: <strong id="proxy-count">0</strong> proxy
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fab fa-firefox"></i> Đường dẫn Firefox</label>
+                                <button class="btn-file" id="firefox-path-btn">
+                                    <i class="fas fa-folder-open"></i> Chọn đường dẫn Firefox
+                                </button>
+                                <input type="text" class="form-input" id="firefox-path-input" placeholder="Chưa chọn..." readonly style="margin-top: 8px;">
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fab fa-firefox"></i> Đường dẫn geckodriver</label>
+                                <button class="btn-file" id="geckodriver-path-btn">
+                                    <i class="fas fa-folder-open"></i> Chọn đường dẫn geckodriver
+                                </button>
+                                <input type="text" class="form-input" id="geckodriver-path-input" placeholder="Chưa chọn..." readonly style="margin-top: 8px;">
+                            </div>
+
+                            <div class="form-group">
+                                <label><i class="fas fa-robot"></i> Chế độ tạo</label>
+                                <select class="form-input" id="reg-mode-select">
+                                    <option value="auto">Tự động hoàn toàn</option>
+                                    <option value="semi">Bán tự động</option>
+                                    <option value="manual">Thủ công</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="settings-actions">
+                            <!-- <button class="btn btn-primary" style="width: 100%;" id="save-config-btn">
+                                <i class="fas fa-save"></i> Lưu cấu hình
+                            </button> -->
+                            <button class="btn btn-success" style="width: 100%;" id="test-firefox-btn">
+                                <i class="fas fa-vial"></i> Test Firefox
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bottom-panel">
+                    <div class="panel-section">
+                        <h4><i class="fas fa-chart-line"></i> Thống kê REG</h4>
+                        <div class="info-grid">
+                            <div class="info-item">
+                                <span class="info-label">Đã tạo:</span>
+                                <span class="info-value success" id="reg-created-count">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Thất bại:</span>
+                                <span class="info-value error" id="reg-failed-count">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Đang chạy:</span>
+                                <span class="info-value" id="reg-running-count">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Tỷ lệ thành công:</span>
+                                <span class="info-value" id="reg-success-rate">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab 3: Nuôi TK -->
+            <div class="tab-pane" id="nuoi-tab">
+                <div class="tab-header">
+                    <h2><i class="fas fa-seedling"></i> NUÔI TÀI KHOẢN</h2>
+                    <div class="header-actions">
+                        <button class="btn btn-success" id="start-nuoi-btn">
+                            <i class="fas fa-play"></i> Bắt đầu nuôi
+                        </button>
+                        <button class="btn btn-danger" id="stop-nuoi-btn">
+                            <i class="fas fa-stop"></i> Dừng
+                        </button>
+                    </div>
+                </div>
+
+                <div class="nuoi-container">
+                    <div class="control-section">
+                        <h4><i class="fas fa-sliders-h"></i> Cài đặt nuôi tài khoản</h4>
+                        <div class="control-grid">
+                            <div class="form-group">
+                                <label><i class="fas fa-heart"></i> Số lượt like/ngày</label>
+                                <input type="number" class="form-input" value="50" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-comment"></i> Số lượt comment/ngày</label>
+                                <input type="number" class="form-input" value="20" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-user-plus"></i> Số lượt follow/ngày</label>
+                                <input type="number" class="form-input" value="30" min="1">
+                            </div>
+                            <div class="form-group">
+                                <label><i class="fas fa-clock"></i> Delay (giây)</label>
+                                <input type="number" class="form-input" value="10" min="1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="treeview-container" style="margin: 0 20px;">
+                        <div class="treeview-header">
+                            <h4><i class="fas fa-list-ul"></i> Nhật ký nuôi nick</h4>
+                            <button class="btn btn-danger" style="padding: 4px 8px; font-size: 10px;">
+                                <i class="fas fa-trash"></i> Xóa log
+                            </button>
+                        </div>
+                        <div class="treeview-content" id="nuoi-log-content">
+                            <!-- Log items will be added here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/eel.js"></script>
+    <script src="src_js/tabs.js"></script>
+    <script src="src_js/reg-handler.js"></script>
+</body>
+</html>
