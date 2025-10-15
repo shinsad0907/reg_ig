@@ -136,35 +136,119 @@ def test_firefox(firefox_path):
 
 @eel.expose
 def select_firefox_path():
-    """Tự dò đường dẫn Firefox"""
+    """Tự động tìm hoặc cho phép chọn Firefox thủ công"""
     try:
+        # 1. Thử tìm Firefox tự động
         default_paths = [
             r"C:\Program Files\Mozilla Firefox\firefox.exe",
-            r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe"
+            r"C:\Program Files (x86)\Mozilla Firefox\firefox.exe",
+            os.path.expanduser(r"~\AppData\Local\Mozilla Firefox\firefox.exe")
         ]
+        
         for path in default_paths:
             if os.path.exists(path):
+                print(f"✓ Tìm thấy Firefox tại: {path}")
                 return path
-        return ""
+        
+        # 2. Nếu không tìm thấy, cho người dùng chọn thủ công
+        print("Không tìm thấy Firefox tự động. Mở hộp thoại chọn file...")
+        root = Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)  # Đưa dialog lên trên cùng
+        
+        file_path = filedialog.askopenfilename(
+            title="Chọn file firefox.exe",
+            filetypes=[
+                ("Firefox", "firefox.exe"),
+                ("Executable files", "*.exe"),
+                ("All files", "*.*")
+            ],
+            initialdir="C:\\Program Files"
+        )
+        
+        root.destroy()
+        
+        if file_path:
+            print(f"✓ Đã chọn Firefox: {file_path}")
+            return file_path
+        else:
+            print("⚠ Người dùng hủy chọn file")
+            return ""
+            
     except Exception as e:
-        print(f"Lỗi khi chọn Firefox path: {e}")
+        print(f"❌ Lỗi khi chọn Firefox: {e}")
         return ""
+
 
 @eel.expose
 def select_geckodriver_path():
-    """Cho phép người dùng tự chọn file geckodriver.exe"""
+    """Cho phép chọn file geckodriver.exe"""
     try:
+        # Thử tìm trong thư mục hiện tại trước
+        local_geckodriver = os.path.join(os.getcwd(), "geckodriver.exe")
+        if os.path.exists(local_geckodriver):
+            print(f"✓ Tìm thấy geckodriver tại: {local_geckodriver}")
+            return local_geckodriver
+        
+        # Mở hộp thoại chọn file
+        print("Mở hộp thoại chọn geckodriver.exe...")
         root = Tk()
-        root.withdraw()  # Ẩn cửa sổ chính của Tkinter
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
         file_path = filedialog.askopenfilename(
             title="Chọn file geckodriver.exe",
-            filetypes=[("Geckodriver", "geckodriver.exe"), ("Tất cả", "*.*")]
+            filetypes=[
+                ("Geckodriver", "geckodriver.exe"),
+                ("Executable files", "*.exe"),
+                ("All files", "*.*")
+            ],
+            initialdir=os.getcwd()
         )
+        
         root.destroy()
-        return file_path or ""
+        
+        if file_path:
+            print(f"✓ Đã chọn geckodriver: {file_path}")
+            return file_path
+        else:
+            print("⚠ Người dùng hủy chọn file")
+            return ""
+            
     except Exception as e:
-        print(f"Lỗi khi chọn geckodriver path: {e}")
+        print(f"❌ Lỗi khi chọn geckodriver: {e}")
         return ""
+@eel.expose
+def import_proxy_file():
+    """Import file proxy"""
+    try:
+        root = Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        
+        file_path = filedialog.askopenfilename(
+            title="Chọn file proxy",
+            filetypes=[
+                ("Text files", "*.txt"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        root.destroy()
+        
+        if file_path:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+            print(f"✓ Đã import proxy từ: {file_path}")
+            return content
+        else:
+            print("⚠ Người dùng hủy chọn file")
+            return ""
+            
+    except Exception as e:
+        print(f"❌ Lỗi khi import proxy: {e}")
+        return ""
+
 
 @eel.expose
 def export_accounts(accounts):
