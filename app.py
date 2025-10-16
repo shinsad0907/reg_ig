@@ -8,6 +8,14 @@ import threading
 from tkinter import Tk, filedialog 
 from web.src_py.reg_ig import FirefoxManager
 from web.src_py.key import Check_key
+from datetime import datetime, timezone
+import base64
+import os
+import json
+import supabase
+import subprocess, platform, os, uuid, winreg
+
+
 
 # === FIX: Lấy đường dẫn thực khi chạy EXE ===
 def get_base_path():
