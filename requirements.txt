@@ -1,6 +1,24 @@
-requests==2.32.3
-selenium==4.32.0
+# ==== Core dependencies ====
+eel==0.18.1
 supabase==0.4.0
-eel == 0.18.1
-selenium-wire == 5.1.0
+
+# ==== Selenium + Network ====
+selenium==4.32.0
+selenium-wire==5.1.0
+requests==2.32.3
+urllib3==2.2.2
+idna==3.7
+chardet==5.2.0
+certifi==2024.8.30
 blinker==1.7.0
+
+# ==== Image + OCR ====
+pillow==10.4.0
+pytesseract==0.3.13
+
+# ==== Automation & UI ====
+pyautogui==0.9.54
+
+# ==== Utilities ====
+python-dateutil==2.9.0.post0
+psutil==6.0.0
