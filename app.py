@@ -1,35 +1,42 @@
-import eel
-import json
+# ==========================================
+# 📦 Standard library imports
+# ==========================================
 import os
 import sys
-from pathlib import Path
-import time
-import threading
-from tkinter import Tk, filedialog 
-from web.src_py.reg_ig import FirefoxManager
-from web.src_py.key import Check_key
-from datetime import datetime, timezone
-import base64
-import os
+import re
 import json
-import supabase
-import subprocess, platform, os, uuid, winreg
-import os
 import time
-import threading
+import uuid
+import base64
+import random
 import tempfile
+import subprocess
+import platform
+import threading
+import winreg
+from pathlib import Path
+from datetime import datetime, timezone
+from time import sleep
+from tkinter import Tk, filedialog
+
+# ==========================================
+# 🧩 Third-party libraries
+# ==========================================
+import eel
+import requests
+import supabase
 from seleniumwire import webdriver  # pip install selenium-wire
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-import requests
-import re
-from time import sleep
-import random
-import json
-import eel  # ← Thêm dòng này
+
+# ==========================================
+# 🧠 Internal project imports
+# ==========================================
+from web.src_py.reg_ig import FirefoxManager
+from web.src_py.key import Check_key
 
 
 # === FIX: Lấy đường dẫn thực khi chạy EXE ===
