@@ -14,7 +14,22 @@ import os
 import json
 import supabase
 import subprocess, platform, os, uuid, winreg
-
+import os
+import time
+import threading
+import tempfile
+from seleniumwire import webdriver  # pip install selenium-wire
+from selenium.webdriver.firefox.service import Service
+from selenium.webdriver.firefox.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+import requests
+import re
+from time import sleep
+import random
+import json
+import eel  # ← Thêm dòng này
 
 
 # === FIX: Lấy đường dẫn thực khi chạy EXE ===
