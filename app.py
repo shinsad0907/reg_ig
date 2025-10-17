@@ -25,6 +25,12 @@ from tkinter import Tk, filedialog
 import eel
 import requests
 import supabase
+try:
+    import brotli  # try native first
+except Exception:
+    import brotlicffi as brotli
+    import sys
+    sys.modules['brotli'] = brotli
 from seleniumwire import webdriver  # pip install selenium-wire
 from selenium.webdriver.firefox.service import Service
 from selenium.webdriver.firefox.options import Options
