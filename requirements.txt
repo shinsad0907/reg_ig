@@ -1,20 +1,24 @@
-# ==== Core dependencies ====
+# Core
 eel==0.18.1
 supabase==0.4.0
 
-# ==== Selenium + Proxy Support ====
+# Selenium + Selenium-Wire
 selenium==4.32.0
 selenium-wire==5.1.0
+blinker==1.6.2
+brotlicffi==1.1.0
+zstandard==0.22.0
+pydivert==2.1.0
+kaitaistruct==0.11
 
-# ==== HTTP & Network ====
+# HTTP
 requests==2.32.3
 urllib3==2.2.2
 idna==3.7
 chardet==5.2.0
 certifi==2024.8.30
-blinker==1.7.0
-legacy-cgi==2.6
 
-# ==== Utilities ====
+# Utilities
 python-dateutil==2.9.0.post0
 psutil==6.0.0
+legacy-cgi==2.6
