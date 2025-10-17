@@ -39,7 +39,16 @@ jobs:
         # Kiem tra xem co file ig.ico trong folder logo khong
         if (Test-Path "web/logo/ig.ico") {
           Write-Host "[SUCCESS] Found ig.ico in logo folder, building with icon..."
-          pyinstaller --onedir --windowed --icon="web/logo/ig.ico" --name="REG IG" app.py
+          pyinstaller --onedir --windowed --icon="web/logo/ig.ico" --name="REG IG" `
+          --hidden-import=brotlicffi `
+          --hidden-import=kaitaistruct `
+          --hidden-import=zstandard `
+          --hidden-import=blinker `
+          --hidden-import=pydivert `
+          --hidden-import=seleniumwire.thirdparty.mitmproxy `
+          app.py
+
+          
         } else {
           Write-Host "[WARNING] ig.ico not found in logo folder, building without icon..."
           pyinstaller --onedir --windowed --name="REG IG" app.py
