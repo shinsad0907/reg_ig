@@ -274,11 +274,11 @@ class FirefoxManager:
             # Nhấn "Sign up"
             sleep(2)
             try:
-                self.wait_and_click('/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[1]/div/section/main/div/div/div[1]/div[2]/div/form/div[9]/div/button', driver=driver, timeout=10)
+                self.wait_and_click('/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[1]/div/section/main/div/div/div[1]/div/div/form/div[9]/div/button', driver=driver, timeout=10)
 
             except Exception as e:
                 self.wait_and_click('/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[1]/div/section/main/div/div/div[1]/div[2]/div/form/div[7]/div/div/div/button', driver=driver)
-                self.wait_and_click('/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[1]/div/section/main/div/div/div[1]/div[2]/div/form/div[9]/div/button', driver=driver)
+                self.wait_and_click('/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[1]/div/section/main/div/div/div[1]/div/div/form/div[9]/div/button', driver=driver)
 
             # Chọn tháng sinh
             sleep(2)
@@ -518,3 +518,4 @@ class FirefoxManager:
 
 #     mgr = FirefoxManager(data)
 #     mgr.thread_reg()
+
