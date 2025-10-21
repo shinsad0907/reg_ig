@@ -380,7 +380,128 @@ def main_check_key(key):
         print(f"Lỗi check key: {e}")
         return {'data': False, 'message': str(e)}
 
+ACCOUNTS_FILE = Path('data/accounts.json')
 
+@eel.expose
+def save_accounts(accounts):
+    """Lưu danh sách tài khoản vào file JSON"""
+    try:
+        # Tạo thư mục data nếu chưa có
+        ACCOUNTS_FILE.parent.mkdir(exist_ok=True)
+        
+        # Lưu vào file
+        with open(ACCOUNTS_FILE, 'w', encoding='utf-8') as f:
+            json.dump(accounts, f, indent=4, ensure_ascii=False)
+        
+        print(f"💾 Đã lưu {len(accounts)} tài khoản vào {ACCOUNTS_FILE}")
+        return {'success': True, 'count': len(accounts)}
+    
+    except Exception as e:
+        print(f"❌ Lỗi khi lưu accounts: {e}")
+        return {'success': False, 'message': str(e)}
+
+
+@eel.expose
+def load_accounts():
+    """Load danh sách tài khoản từ file JSON"""
+    try:
+        if not ACCOUNTS_FILE.exists():
+            print("📂 File accounts.json chưa tồn tại, trả về danh sách rỗng")
+            return []
+        
+        with open(ACCOUNTS_FILE, 'r', encoding='utf-8') as f:
+            accounts = json.load(f)
+        
+        print(f"📂 Đã load {len(accounts)} tài khoản từ {ACCOUNTS_FILE}")
+        return accounts
+    
+    except Exception as e:
+        print(f"❌ Lỗi khi load accounts: {e}")
+        return []
+
+
+# ============== CÁC HÀM XỬ LÝ (CHỈ PRINT) ==============
+import json
+from pathlib import Path
+
+XPATH_FILE = Path('data/xpath_settings.json')
+
+@eel.expose
+def get_xpath_settings():
+    """Lấy cài đặt XPath từ file"""
+    try:
+        if XPATH_FILE.exists():
+            with open(XPATH_FILE, 'r', encoding='utf-8') as f:
+                xpath_settings = json.load(f)
+            print(f"📂 Đã load XPath settings: {xpath_settings}")
+            return xpath_settings
+        else:
+            # Trả về giá trị mặc định
+            default_xpaths = {
+                'username': '//input[@name="username"]',
+                'password': '//input[@name="password"]'
+            }
+            print("⚠️ Chưa có file xpath_settings.json, trả về giá trị mặc định")
+            return default_xpaths
+    except Exception as e:
+        print(f"❌ Lỗi khi load XPath settings: {e}")
+        return {
+            'username': '//input[@name="username"]',
+            'password': '//input[@name="password"]'
+        }
+
+
+@eel.expose
+def save_xpath_settings(xpath_settings):
+    """Lưu cài đặt XPath vào file"""
+    try:
+        # Tạo thư mục data nếu chưa có
+        XPATH_FILE.parent.mkdir(exist_ok=True)
+        
+        # Lưu vào file
+        with open(XPATH_FILE, 'w', encoding='utf-8') as f:
+            json.dump(xpath_settings, f, indent=4, ensure_ascii=False)
+        
+        print(f"💾 Đã lưu XPath settings: {xpath_settings}")
+        return {'success': True, 'message': 'Đã lưu XPath settings!'}
+    
+    except Exception as e:
+        print(f"❌ Lỗi khi lưu XPath settings: {e}")
+        return {'success': False, 'message': str(e)}
+
+
+@eel.expose
+def start_login(accounts, threads, delay, xpath_settings):
+    """Bắt đầu quá trình login"""
+    data = {
+        'accounts': accounts,
+        'threads': threads,
+        'delay': delay,
+        'xpath_settings': xpath_settings
+    }
+    print(data)
+    return {'success': True, 'message': 'Login started'}
+
+
+@eel.expose
+def start_check_live(accounts, threads, delay):
+    """Bắt đầu quá trình check live"""
+    print(f"\n✅ START CHECK LIVE: {len(accounts)} tài khoản | Threads: {threads} | Delay: {delay}s")
+    return {'success': True, 'message': 'Check live started'}
+
+
+@eel.expose
+def start_check_block(accounts, threads, delay):
+    """Bắt đầu quá trình check block"""
+    print(f"\n🚫 START CHECK BLOCK: {len(accounts)} tài khoản | Threads: {threads} | Delay: {delay}s")
+    return {'success': True, 'message': 'Check block started'}
+
+
+@eel.expose
+def start_nuoi(accounts, config):
+    """Bắt đầu quá trình nuôi tài khoản"""
+    print(f"\n🌱 START NUÔI: {len(accounts)} tài khoản | Config: {config}")
+    return {'success': True, 'message': 'Nuoi started'}
 # === CHẠY ỨNG DỤNG ===
 if __name__ == '__main__':
     try:

@@ -42,9 +42,6 @@
             <button class="tab-btn" data-tab="reg">
                 <i class="fas fa-user-plus"></i> Reg TK Instagram
             </button>
-            <button class="tab-btn" data-tab="nuoi">
-                <i class="fas fa-seedling"></i> Nuôi TK
-            </button>
         </div>
 
         <!-- Tab Content -->
@@ -54,36 +51,45 @@
                 <div class="tab-header">
                     <h2><i class="fas fa-list"></i> QUẢN LÝ TÀI KHOẢN INSTAGRAM</h2>
                     <div class="header-actions">
-                        <button class="btn btn-success" id="import-btn">
-                            <i class="fas fa-file-import"></i> Import
+                        <button class="btn btn-success" id="import-accounts-btn">
+                            <i class="fas fa-file-import"></i> Import File
                         </button>
-                        <button class="btn btn-danger" id="delete-btn">
-                            <i class="fas fa-trash"></i> Xóa
+                        <button class="btn btn-danger" id="delete-selected-btn">
+                            <i class="fas fa-trash"></i> Xóa đã chọn
                         </button>
-                        <button class="btn btn-primary" id="check-btn">
-                            <i class="fas fa-check"></i> Check Live
+                        <button class="btn btn-primary" id="export-selected-btn">
+                            <i class="fas fa-file-export"></i> Export
                         </button>
                     </div>
                 </div>
 
                 <div class="table-container">
-                    <table class="data-table">
+                    <table class="data-table" id="manage-table">
                         <thead>
                             <tr>
-                                <th class="checkbox-col"><input type="checkbox" id="select-all"></th>
-                                <th>STT</th>
-                                <th>Username</th>
-                                <th>Password</th>
-                                <th>Email</th>
-                                <th>Followers</th>
-                                <th>Following</th>
-                                <th>Posts</th>
-                                <th>Status</th>
-                                <th>Thao tác</th>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" id="select-all-checkbox">
+                                </th>
+                                <th style="width: 60px;">STT</th>
+                                <th style="width: 150px;">Username</th>
+                                <th style="width: 120px;">Password</th>
+                                <th style="width: 180px;">Email</th>
+                                <th style="width: 100px;">Followers</th>
+                                <th style="width: 100px;">Following</th>
+                                <th style="width: 80px;">Avatar</th>
+                                <th style="width: 80px;">Posts</th>
+                                <th style="min-width: 180px;">Proxy</th>
+                                <th style="min-width: 200px;">Cookie</th>
+                                <th style="width: 100px;">Trạng thái</th>
                             </tr>
                         </thead>
-                        <tbody id="accounts-tbody">
-                            <!-- Data will be loaded here -->
+                        <tbody id="manage-tbody">
+                            <tr>
+                                <td colspan="12" style="text-align: center; padding: 30px; color: #888;">
+                                    <i class="fas fa-inbox"></i><br>
+                                    Click chuột phải để thêm tài khoản hoặc Import File
+                                </td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
@@ -94,26 +100,75 @@
                         <div class="info-grid">
                             <div class="info-item">
                                 <span class="info-label">Tổng số:</span>
-                                <span class="info-value" id="stats-total">0</span>
+                                <span class="info-value" id="manage-stats-total">0</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Live:</span>
-                                <span class="info-value success" id="stats-live">0</span>
+                                <span class="info-value success" id="manage-stats-live">0</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Die:</span>
-                                <span class="info-value error" id="stats-die">0</span>
+                                <span class="info-value error" id="manage-stats-die">0</span>
+                            </div>
+                            <div class="info-item">
+                                <span class="info-label">Chưa check:</span>
+                                <span class="info-value" id="manage-stats-pending">0</span>
                             </div>
                             <div class="info-item">
                                 <span class="info-label">Đã chọn:</span>
-                                <span class="info-value" id="stats-selected">0</span>
+                                <span class="info-value" id="manage-stats-selected">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="panel-section" style="margin-top: 16px;">
+                        <h4><i class="fas fa-map-marked-alt"></i> Cài đặt XPath</h4>
+                        <div style="display: grid; gap: 12px;">
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 11px; color: #888;">
+                                    <i class="fas fa-user"></i> XPath Username Input
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-input" 
+                                    id="xpath-username-input" 
+                                    placeholder='//input[@name="username"]'
+                                    style="font-family: 'Courier New', monospace; font-size: 11px;"
+                                >
+                                <div style="font-size: 10px; color: #888; margin-top: 4px;">
+                                    <i class="fas fa-info-circle"></i> Ví dụ: //input[@name="username"] hoặc //input[@aria-label="Phone number, username, or email"]
+                                </div>
+                            </div>
+                            
+                            <div>
+                                <label style="display: block; margin-bottom: 4px; font-size: 11px; color: #888;">
+                                    <i class="fas fa-lock"></i> XPath Password Input
+                                </label>
+                                <input 
+                                    type="text" 
+                                    class="form-input" 
+                                    id="xpath-password-input" 
+                                    placeholder='//input[@name="password"]'
+                                    style="font-family: 'Courier New', monospace; font-size: 11px;"
+                                >
+                                <div style="font-size: 10px; color: #888; margin-top: 4px;">
+                                    <i class="fas fa-info-circle"></i> Ví dụ: //input[@name="password"] hoặc //input[@aria-label="Password"]
+                                </div>
+                            </div>
+                            
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-primary" id="load-xpath-btn" style="flex: 1;">
+                                    <i class="fas fa-download"></i> Tải XPath
+                                </button>
+                                <button class="btn btn-success" id="save-xpath-btn" style="flex: 1;">
+                                    <i class="fas fa-save"></i> Lưu XPath
+                                </button>
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Tab 2: Reg TK Instagram -->
             <!-- Tab 2: Reg TK Instagram -->
             <div class="tab-pane" id="reg-tab">
                 <div class="tab-header">
@@ -145,16 +200,17 @@
                                 <thead>
                                     <tr>
                                         <th style="width: 60px;">STT</th>
-                                        <th style="width: 180px;">Username</th>
-                                        <th style="width: 200px;">Email</th>
-                                        <th style="width: 150px;">Password</th>
-                                        <th style="min-width: 250px;">Cookie</th>
+                                        <th style="width: 150px;">Username</th>
+                                        <th style="width: 180px;">Email</th>
+                                        <th style="width: 120px;">Password</th>
+                                        <th style="width: 180px;">Proxy</th>
+                                        <th style="min-width: 200px;">Cookie</th>
                                         <th style="width: 100px;">Thao tác</th>
                                     </tr>
                                 </thead>
                                 <tbody id="reg-accounts-tbody">
                                     <tr>
-                                        <td colspan="6" style="text-align: center; padding: 30px; color: #888;">
+                                        <td colspan="7" style="text-align: center; padding: 30px; color: #888;">
                                             <i class="fas fa-inbox"></i><br>
                                             Chưa có tài khoản nào được tạo
                                         </td>
@@ -172,7 +228,7 @@
                         <div class="settings-content">
                             <div class="form-group">
                                 <label><i class="fas fa-hashtag"></i> Số lượng tài khoản cần tạo</label>
-                                <input type="number" class="form-input" id="account-count-input" value="10" min="1" max="100">
+                                <input type="number" class="form-input" id="account-count-input" value="10" min="1" max="1000">
                             </div>
 
                             <div class="form-group">
@@ -199,7 +255,7 @@
                                 <textarea 
                                     class="form-input" 
                                     id="proxy-list-input" 
-                                    placeholder="host:port:user:pass&#10;sp06v2-03.proxygiare1k.shop:37616:sp06v205-37616:WTLCO&#10;sp06v2-03.proxygiare1k.shop:37615:sp06v205-37615:UAGSL"
+                                    placeholder="host:port:user:pass&#10;sp06v2-03.proxygiare1k.shop:37616:sp06v205-37616:WTLCO"
                                     rows="5"
                                     style="resize: vertical; font-family: 'Courier New', monospace; font-size: 11px;"
                                 ></textarea>
@@ -276,56 +332,187 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
 
-            <!-- Tab 3: Nuôi TK -->
-            <div class="tab-pane" id="nuoi-tab">
-                <div class="tab-header">
-                    <h2><i class="fas fa-seedling"></i> NUÔI TÀI KHOẢN</h2>
-                    <div class="header-actions">
-                        <button class="btn btn-success" id="start-nuoi-btn">
-                            <i class="fas fa-play"></i> Bắt đầu nuôi
-                        </button>
-                        <button class="btn btn-danger" id="stop-nuoi-btn">
-                            <i class="fas fa-stop"></i> Dừng
-                        </button>
-                    </div>
+    <!-- Context Menu for Manage Tab -->
+    <div id="context-menu-manage" class="context-menu" style="display: none;">
+        <div class="context-menu-item" data-action="append">
+            <i class="fas fa-plus"></i> Thêm tài khoản
+        </div>
+        <div class="context-menu-item" data-action="login">
+            <i class="fas fa-sign-in-alt"></i> Login lấy lại Cookie
+        </div>
+        <div class="context-menu-item" data-action="add-proxy">
+            <i class="fas fa-network-wired"></i> Thêm Proxy
+        </div>
+        <div class="context-menu-item" data-action="check-live">
+            <i class="fas fa-check-circle"></i> Check Live
+        </div>
+        <div class="context-menu-item" data-action="check-block">
+            <i class="fas fa-ban"></i> Check Block
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="nuoi">
+            <i class="fas fa-seedling"></i> Nuôi tài khoản
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="export">
+            <i class="fas fa-file-export"></i> Export
+        </div>
+        <div class="context-menu-item" data-action="delete">
+            <i class="fas fa-trash"></i> Xóa
+        </div>
+    </div>
+
+    <!-- Modal: Append Account -->
+    <div id="modal-append-account" class="modal">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-plus"></i> Thêm tài khoản</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nhập dữ liệu (mỗi dòng: username|password|email|cookie)</label>
+                    <textarea class="form-input" id="append-data-input" rows="10" placeholder="user1|pass1|email1|cookie1&#10;user2|pass2|email2|cookie2"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" id="append-confirm-btn">
+                    <i class="fas fa-check"></i> Thêm
+                </button>
+                <button class="btn btn-danger" id="append-cancel-btn">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Add Proxy -->
+    <div id="modal-add-proxy" class="modal">
+        <div class="modal-content" style="width: 500px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-network-wired"></i> Thêm Proxy cho tài khoản</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Nhập proxy (mỗi dòng 1 proxy: host:port:user:pass)</label>
+                    <textarea class="form-input" id="proxy-data-input" rows="8" placeholder="proxy1:port:user:pass&#10;proxy2:port:user:pass"></textarea>
+                </div>
+                <div style="font-size: 11px; color: #888; margin-top: 8px;">
+                    <i class="fas fa-info-circle"></i> Số proxy phải bằng hoặc nhiều hơn số tài khoản đã chọn
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" id="proxy-confirm-btn">
+                    <i class="fas fa-check"></i> Thêm
+                </button>
+                <button class="btn btn-danger">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Check Settings -->
+    <div id="modal-check-settings" class="modal">
+        <div class="modal-content" style="width: 400px;">
+            <div class="modal-header">
+                <h3><i class="fas fa-cog"></i> Cài đặt kiểm tra</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label><i class="fas fa-hashtag"></i> Số luồng</label>
+                    <input type="number" class="form-input" id="check-thread-input" value="5" min="1" max="50">
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-clock"></i> Delay giữa các lần check (giây)</label>
+                    <input type="number" class="form-input" id="check-delay-input" value="2" min="1" max="30">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" id="check-confirm-btn">
+                    <i class="fas fa-play"></i> Bắt đầu
+                </button>
+                <button class="btn btn-danger">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: Nuôi tài khoản -->
+    <div id="modal-nuoi-account" class="modal">
+        <div class="modal-content" style="width: 600px; max-height: 90vh;">
+            <div class="modal-header">
+                <h3><i class="fas fa-seedling"></i> Nuôi tài khoản</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body" style="max-height: calc(90vh - 150px); overflow-y: auto;">
+                <div class="form-group">
+                    <label><i class="fas fa-hashtag"></i> Số lượng luồng</label>
+                    <input type="number" class="form-input" id="nuoi-thread-input" value="5" min="1" max="50">
                 </div>
 
-                <div class="nuoi-container">
-                    <div class="control-section">
-                        <h4><i class="fas fa-sliders-h"></i> Cài đặt nuôi tài khoản</h4>
-                        <div class="control-grid">
-                            <div class="form-group">
-                                <label><i class="fas fa-heart"></i> Số lượt like/ngày</label>
-                                <input type="number" class="form-input" value="50" min="1">
-                            </div>
-                            <div class="form-group">
-                                <label><i class="fas fa-comment"></i> Số lượt comment/ngày</label>
-                                <input type="number" class="form-input" value="20" min="1">
-                            </div>
-                            <div class="form-group">
-                                <label><i class="fas fa-user-plus"></i> Số lượt follow/ngày</label>
-                                <input type="number" class="form-input" value="30" min="1">
-                            </div>
-                            <div class="form-group">
-                                <label><i class="fas fa-clock"></i> Delay (giây)</label>
-                                <input type="number" class="form-input" value="10" min="1">
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="treeview-container" style="margin: 0 20px;">
-                        <div class="treeview-header">
-                            <h4><i class="fas fa-list-ul"></i> Nhật ký nuôi nick</h4>
-                            <button class="btn btn-danger" style="padding: 4px 8px; font-size: 10px;">
-                                <i class="fas fa-trash"></i> Xóa log
-                            </button>
-                        </div>
-                        <div class="treeview-content" id="nuoi-log-content">
-                            <!-- Log items will be added here -->
-                        </div>
-                    </div>
+                <div class="form-group">
+                    <label><i class="fas fa-clock"></i> Delay giữa các hành động (giây)</label>
+                    <input type="number" class="form-input" id="nuoi-delay-input" value="10" min="1" max="60">
                 </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-user-plus"></i> Số lượt follow random/ngày</label>
+                    <input type="number" class="form-input" id="nuoi-follow-input" value="20" min="1" max="100">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="nuoi-upload-avatar-checkbox" style="width: auto; margin-right: 8px;">
+                        <i class="fas fa-image"></i> Thêm Avatar
+                    </label>
+                    <button class="btn-file" id="nuoi-avatar-folder-btn" style="margin-top: 8px;">
+                        <i class="fas fa-folder-open"></i> Chọn thư mục Avatar
+                    </button>
+                    <input type="text" class="form-input" id="nuoi-avatar-folder-input" placeholder="Chưa chọn..." readonly style="margin-top: 8px;">
+                </div>
+
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="nuoi-post-status-checkbox" style="width: auto; margin-right: 8px;">
+                        <i class="fas fa-pen"></i> Đăng Status
+                    </label>
+                    <textarea 
+                        class="form-input" 
+                        id="nuoi-status-input" 
+                        placeholder="Nhập nội dung status (mỗi dòng 1 status)..."
+                        rows="5"
+                        style="resize: vertical; margin-top: 8px;"
+                    ></textarea>
+                    <button class="btn-file" id="nuoi-status-file-btn" style="margin-top: 8px;">
+                        <i class="fas fa-file-import"></i> Import từ file
+                    </button>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-network-wired"></i> Proxy (tùy chọn)</label>
+                    <textarea 
+                        class="form-input" 
+                        id="nuoi-proxy-input" 
+                        placeholder="host:port:user:pass"
+                        rows="3"
+                        style="resize: vertical; font-family: 'Courier New', monospace; font-size: 11px;"
+                    ></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" id="nuoi-confirm-btn">
+                    <i class="fas fa-play"></i> Bắt đầu nuôi
+                </button>
+                <button class="btn btn-danger">
+                    <i class="fas fa-times"></i> Hủy
+                </button>
             </div>
         </div>
     </div>
@@ -333,5 +520,6 @@
     <script src="/eel.js"></script>
     <script src="src_js/tabs.js"></script>
     <script src="src_js/reg-handler.js"></script>
+    <script src="src_js/manage-accounts-complete.js"></script>
 </body>
 </html>

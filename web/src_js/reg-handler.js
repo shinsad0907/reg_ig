@@ -28,8 +28,8 @@ function getRegConfig() {
 
 // Hàm validate dữ liệu
 function validateRegConfig(config) {
-    if (config.accountCount < 1 || config.accountCount > 100) {
-        alert('Số lượng tài khoản phải từ 1 đến 100!');
+    if (config.accountCount < 1 || config.accountCount > 1000) {
+        alert('Số lượng tài khoản phải từ 1 đến 1000!');
         return false;
     }
     

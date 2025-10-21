@@ -98,6 +98,7 @@ body {
     background: #1e7e34;
 }
 
+
 .btn-danger {
     background: #dc3545;
     color: white;
@@ -551,4 +552,187 @@ body {
         width: 100%;
         max-height: 400px;
     }
+}
+/* Context Menu */
+.context-menu {
+    position: fixed;
+    background: #2d2d2d;
+    border: 1px solid #404040;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    z-index: 10000;
+    min-width: 200px;
+    padding: 4px 0;
+}
+
+.context-menu-item {
+    padding: 8px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 11px;
+    color: #ccc;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.context-menu-item:hover {
+    background: #3a3a3a;
+    color: #fff;
+}
+
+.context-menu-item i {
+    width: 16px;
+    text-align: center;
+    color: #e1306c;
+}
+
+.context-menu-divider {
+    height: 1px;
+    background: #404040;
+    margin: 4px 0;
+}
+
+/* Modal */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.7);
+    z-index: 9999;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background: #2d2d2d;
+    border: 1px solid #404040;
+    border-radius: 8px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    max-height: 90vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    animation: modalFadeIn 0.3s ease;
+}
+
+@keyframes modalFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.modal-header {
+    background: #3a3a3a;
+    border-bottom: 1px solid #404040;
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    font-size: 14px;
+    color: #e1306c;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0;
+}
+
+.modal-close {
+    background: transparent;
+    border: none;
+    color: #ccc;
+    font-size: 24px;
+    cursor: pointer;
+    padding: 0;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.modal-close:hover {
+    color: #fff;
+    background: #404040;
+    border-radius: 4px;
+}
+
+.modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    flex: 1;
+}
+
+.modal-footer {
+    background: #3a3a3a;
+    border-top: 1px solid #404040;
+    padding: 15px 20px;
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+/* Table Row Selection */
+.data-table tbody tr {
+    cursor: pointer;
+    user-select: none;
+}
+
+.data-table tbody tr.selected {
+    background: #3a4a5a !important;
+    border-left: 3px solid #e1306c;
+}
+
+.data-table tbody tr.selected td {
+    color: #fff;
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    display: inline-block;
+}
+
+.status-live {
+    background: rgba(40, 167, 69, 0.2);
+    color: #28a745;
+}
+
+.status-die {
+    background: rgba(220, 53, 69, 0.2);
+    color: #dc3545;
+}
+
+.status-pending {
+    background: rgba(255, 193, 7, 0.2);
+    color: #ffc107;
+}
+
+.status-checking {
+    background: rgba(23, 162, 184, 0.2);
+    color: #17a2b8;
+}
+
+.status-running {
+    background: rgba(0, 123, 255, 0.2);
+    color: #007bff;
 }

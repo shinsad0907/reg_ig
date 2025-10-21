@@ -359,28 +359,39 @@ class FirefoxManager:
             # === Chờ đến khi Instagram load về trang chính ===
             print(f"[Thread-{index}] 🔍 Bắt đầu chờ trang chính Instagram...")
             graphql_req = None
+            try:
+                if self.wait_and_get_text('/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[1]/div/section/main/div/div/div[1]/div/div[2]/form/div/div[4]/span', timeout=3, driver=driver).strip():
+                    print(f"[Thread-{index}] ❌ Phát hiện lỗi trong quá trình đăng ký, dừng tiến trình.")
+                    sleep(30)
+                    self.wait_and_click(
+                        '/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[1]/div/section/main/div/div/div[1]/div/div[2]/form/div/div[2]/div',
+                        driver=driver,
+                        timeout=30
+                    )
+            except:
+                pass
+            for i in range(2):
+                for i in range(120):
+                    current_url = driver.current_url
+                    print(f"[Thread-{index}] 🔗 [{i+1}/120] Checking URL: {current_url}")
+                    if current_url.startswith("https://www.instagram.com/?nux=1") or current_url == "https://www.instagram.com/":
+                        print(f"[Thread-{index}] ✅ Đã vào trang chính, chờ request /api/graphql ...")
+                        self._wait_for_graphql(driver, timeout=20)
+                        graphql_req = self._find_graphql_request(driver)
+                        break
+                    elif "challenge" in current_url or "suspended" in current_url:
+                        driver.quit()  # Dừng tiến trình nếu bị challenge hoặc suspended
+                        account_data = {
+                            'username': mail.split('@')[0],
+                            'email': mail,
+                            'password': account['defaultPassword'],
+                            'cookie': "died_account"
+                        }
+                        eel.addAccountToTable(account_data)
+                # https://www.instagram.com/accounts/suspended/?next=https%3A%2F%2Fwww.instagram.com%2F%3Fnux%3D1%26__coig_ufac%3D1
 
-            for i in range(120):
-                current_url = driver.current_url
-                print(f"[Thread-{index}] 🔗 [{i+1}/120] Checking URL: {current_url}")
-
-                if current_url.startswith("https://www.instagram.com/?nux=1") or current_url == "https://www.instagram.com/":
-                    print(f"[Thread-{index}] ✅ Đã vào trang chính, chờ request /api/graphql ...")
-                    self._wait_for_graphql(driver, timeout=20)
-                    graphql_req = self._find_graphql_request(driver)
-                    break
-                elif "challenge" in current_url or "suspended" in current_url:
-                    driver.quit()  # Dừng tiến trình nếu bị challenge hoặc suspended
-                    account_data = {
-                        'username': mail.split('@')[0],
-                        'email': mail,
-                        'password': account['defaultPassword'],
-                        'cookie': "died_account"
-                    }
-                    eel.addAccountToTable(account_data)
-            # https://www.instagram.com/accounts/suspended/?next=https%3A%2F%2Fwww.instagram.com%2F%3Fnux%3D1%26__coig_ufac%3D1
-
-                sleep(1)
+                    sleep(1)
+                driver.refresh()
 
             # === Kiểm tra và in cookie ===
             if graphql_req:
@@ -398,6 +409,7 @@ class FirefoxManager:
                 eel.addAccountToTable(account_data)
                 
             else:
+
                 print(f"[Thread-{index}] ⚠️ Không tìm thấy request /api/graphql")
                 print(f"\n[Thread-{index}] 📋 RESULT (No Cookie): {mail}|{account['defaultPassword']}|NO_COOKIE\n")
                 
@@ -519,3 +531,4 @@ class FirefoxManager:
 #     mgr = FirefoxManager(data)
 #     mgr.thread_reg()
 
+# https://www.instagram.com/accounts/emailsignup/
