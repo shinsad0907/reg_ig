@@ -2,24 +2,32 @@
 
 // Hàm đếm số lượng proxy
 function updateProxyCount() {
-    const proxyText = document.getElementById('proxy-list-input').value.trim();
+    const proxyInput = document.getElementById('proxy-list-input');
+    if (!proxyInput) return;
+    
+    const proxyText = proxyInput.value.trim();
     const proxyList = proxyText ? proxyText.split('\n').filter(line => line.trim()) : [];
-    document.getElementById('proxy-count').textContent = proxyList.length;
+    
+    const proxyCountEl = document.getElementById('proxy-count');
+    if (proxyCountEl) {
+        proxyCountEl.textContent = proxyList.length;
+    }
 }
 
 // Hàm lấy dữ liệu cấu hình từ settings panel
 function getRegConfig() {
-    const proxyText = document.getElementById('proxy-list-input').value.trim();
+    const proxyInput = document.getElementById('proxy-list-input');
+    const proxyText = proxyInput ? proxyInput.value.trim() : '';
     const proxyList = proxyText ? proxyText.split('\n').filter(line => line.trim()) : [];
     
     const config = {
-        accountCount: parseInt(document.getElementById('account-count-input').value) || 10,
-        threadCount: parseInt(document.getElementById('account-count-thread-input').value) || 10,
-        delay: parseInt(document.getElementById('delay-input').value) || 5,
-        defaultPassword: document.getElementById('password-input').value || 'Instagram@123',
-        firefoxPath: document.getElementById('firefox-path-input').value || '',
-        geckodriverPath: document.getElementById('geckodriver-path-input').value || '',
-        regMode: document.getElementById('reg-mode-select').value || 'auto',
+        accountCount: parseInt(document.getElementById('account-count-input')?.value || 10),
+        threadCount: parseInt(document.getElementById('account-count-thread-input')?.value || 10),
+        delay: parseInt(document.getElementById('delay-input')?.value || 5),
+        defaultPassword: document.getElementById('password-input')?.value || 'Instagram@123',
+        firefoxPath: document.getElementById('firefox-path-input')?.value || '',
+        geckodriverPath: document.getElementById('geckodriver-path-input')?.value || '',
+        regMode: document.getElementById('reg-mode-select')?.value || 'auto',
         proxyList: proxyList
     };
     
@@ -55,40 +63,68 @@ function validateRegConfig(config) {
     
     // Validate proxy format (optional)
     if (config.proxyList.length > 0) {
-        const invalidProxies = config.proxyList.filter(proxy => {
+        // Làm sạch dữ liệu trước khi kiểm tra
+        const cleanedProxies = config.proxyList
+            .map(p => p.trim())
+            .filter(p => p !== '');
+
+        const invalidProxies = cleanedProxies.filter(proxy => {
             const parts = proxy.split(':');
-            return parts.length !== 4; // host:port:user:pass
+            // Hợp lệ nếu:
+            // 1. Dạng ip:port
+            // 2. Dạng ip:port:user:pass
+            // 3. Dạng key (chỉ gồm ký tự chữ + số, không có dấu ':')
+            const isIpPort = parts.length === 2;
+            const isIpPortUserPass = parts.length === 4;
+            const isKey = /^[A-Za-z0-9]+$/.test(proxy); // dạng key
+
+            return !(isIpPort || isIpPortUserPass || isKey);
         });
-        
+
         if (invalidProxies.length > 0) {
-            alert('Có proxy không đúng định dạng (host:port:user:pass):\n' + invalidProxies.join('\n'));
+            alert('Có proxy không đúng định dạng (ip:port, ip:port:user:pass, hoặc key):\n' + invalidProxies.join('\n'));
             return false;
         }
     }
+
+
     
     return true;
 }
 
 // Hàm cập nhật UI khi bắt đầu reg
 function updateUIStartReg() {
-    document.getElementById('start-reg-btn').disabled = true;
-    document.getElementById('stop-reg-btn').disabled = false;
-    document.getElementById('reg-running-count').textContent = '1';
+    const startBtn = document.getElementById('start-reg-btn');
+    const stopBtn = document.getElementById('stop-reg-btn');
+    const runningCount = document.getElementById('reg-running-count');
+    
+    if (startBtn) startBtn.disabled = true;
+    if (stopBtn) stopBtn.disabled = false;
+    if (runningCount) runningCount.textContent = '1';
 }
 
 // Hàm cập nhật UI khi dừng reg
 function updateUIStopReg() {
-    document.getElementById('start-reg-btn').disabled = false;
-    document.getElementById('stop-reg-btn').disabled = true;
-    document.getElementById('reg-running-count').textContent = '0';
+    const startBtn = document.getElementById('start-reg-btn');
+    const stopBtn = document.getElementById('stop-reg-btn');
+    const runningCount = document.getElementById('reg-running-count');
+    
+    if (startBtn) startBtn.disabled = false;
+    if (stopBtn) stopBtn.disabled = true;
+    if (runningCount) runningCount.textContent = '0';
 }
 
 // Hàm thêm tài khoản vào bảng
 function addAccountToTable(accountData) {
     const tbody = document.getElementById('reg-accounts-tbody');
+    if (!tbody) {
+        console.error('Không tìm thấy reg-accounts-tbody');
+        return;
+    }
     
     // Xóa dòng "Chưa có tài khoản" nếu đây là tài khoản đầu tiên
-    if (tbody.querySelector('td[colspan="6"]')) {
+    const emptyRow = tbody.querySelector('td[colspan]');
+    if (emptyRow) {
         tbody.innerHTML = '';
     }
     
@@ -117,13 +153,20 @@ function addAccountToTable(accountData) {
 // Hàm xóa tài khoản trong bảng
 function deleteRegAccount(button) {
     const row = button.closest('tr');
+    if (!row) return;
+    
     row.remove();
     
     // Cập nhật lại STT
     const tbody = document.getElementById('reg-accounts-tbody');
+    if (!tbody) return;
+    
     const rows = tbody.querySelectorAll('tr');
     rows.forEach((row, index) => {
-        row.cells[0].textContent = index + 1;
+        const firstCell = row.cells[0];
+        if (firstCell) {
+            firstCell.textContent = index + 1;
+        }
     });
     
     // Nếu không còn tài khoản nào, hiển thị thông báo
@@ -144,200 +187,303 @@ function deleteRegAccount(button) {
 // Hàm cập nhật thống kê
 function updateRegStats() {
     const tbody = document.getElementById('reg-accounts-tbody');
-    const rows = tbody.querySelectorAll('tr:not([colspan])');
-    const createdCount = rows.length;
+    if (!tbody) return;
     
-    document.getElementById('reg-created-count').textContent = createdCount;
+    const rows = tbody.querySelectorAll('tr');
+    // Loại bỏ các row có colspan (empty message)
+    const dataRows = Array.from(rows).filter(row => !row.querySelector('td[colspan]'));
+    const createdCount = dataRows.length;
+    
+    const createdEl = document.getElementById('reg-created-count');
+    const failedEl = document.getElementById('reg-failed-count');
+    const rateEl = document.getElementById('reg-success-rate');
+    
+    if (createdEl) {
+        createdEl.textContent = createdCount;
+    }
     
     // Tính tỷ lệ thành công
-    const totalAttempts = createdCount + parseInt(document.getElementById('reg-failed-count').textContent || 0);
+    const failedCount = parseInt(failedEl?.textContent || 0);
+    const totalAttempts = createdCount + failedCount;
     const successRate = totalAttempts > 0 ? Math.round((createdCount / totalAttempts) * 100) : 0;
-    document.getElementById('reg-success-rate').textContent = successRate + '%';
+    
+    if (rateEl) {
+        rateEl.textContent = successRate + '%';
+    }
 }
 
 // Event Listeners
 document.addEventListener('DOMContentLoaded', function() {
     // Cập nhật số lượng proxy khi nhập
     const proxyInput = document.getElementById('proxy-list-input');
-    proxyInput.addEventListener('input', updateProxyCount);
+    if (proxyInput) {
+        proxyInput.addEventListener('input', updateProxyCount);
+        updateProxyCount(); // Init count
+    }
     
     // Nút xóa proxy
-    document.getElementById('clear-proxy-btn').addEventListener('click', function() {
-        document.getElementById('proxy-list-input').value = '';
-        updateProxyCount();
-    });
-    
-    // Nút import proxy từ file
-    document.getElementById('import-proxy-btn').addEventListener('click', async function() {
-        try {
-            const content = await eel.import_proxy_file()();
-            if (content) {
-                document.getElementById('proxy-list-input').value = content;
+    const clearProxyBtn = document.getElementById('clear-proxy-btn');
+    if (clearProxyBtn) {
+        clearProxyBtn.addEventListener('click', function() {
+            const proxyInput = document.getElementById('proxy-list-input');
+            if (proxyInput) {
+                proxyInput.value = '';
                 updateProxyCount();
             }
-        } catch (error) {
-            console.error('Lỗi khi import proxy:', error);
-            alert('Không thể import file proxy!');
-        }
-    });
+        });
+    }
+    
+    // Nút import proxy từ file
+    const importProxyBtn = document.getElementById('import-proxy-btn');
+    if (importProxyBtn) {
+        importProxyBtn.addEventListener('click', async function() {
+            try {
+                if (typeof eel === 'undefined') {
+                    alert('Backend chưa sẵn sàng!');
+                    return;
+                }
+                const content = await eel.import_proxy_file()();
+                if (content) {
+                    const proxyInput = document.getElementById('proxy-list-input');
+                    if (proxyInput) {
+                        proxyInput.value = content;
+                        updateProxyCount();
+                    }
+                }
+            } catch (error) {
+                console.error('Lỗi khi import proxy:', error);
+                alert('Không thể import file proxy!');
+            }
+        });
+    }
     
     // Nút bắt đầu tạo
-    document.getElementById('start-reg-btn').addEventListener('click', async function() {
-        const config = getRegConfig();
-        
-        if (!validateRegConfig(config)) {
-            return;
-        }
-        
-        // Hiển thị thông tin proxy
-        if (config.proxyList.length > 0) {
-            console.log(`Sử dụng ${config.proxyList.length} proxy`);
-        } else {
-            console.log('Không sử dụng proxy');
-        }
-        
-        try {
-            updateUIStartReg();
+    const startRegBtn = document.getElementById('start-reg-btn');
+    if (startRegBtn) {
+        startRegBtn.addEventListener('click', async function() {
+            const config = getRegConfig();
             
-            // Gọi hàm Python qua Eel
-            const result = await eel.start_registration(config)();
+            if (!validateRegConfig(config)) {
+                return;
+            }
             
-            if (result.success) {
-                console.log('Bắt đầu tạo tài khoản thành công!');
+            // Hiển thị thông tin proxy
+            if (config.proxyList.length > 0) {
+                console.log(`Sử dụng ${config.proxyList.length} proxy`);
             } else {
-                alert('Lỗi: ' + result.message);
+                console.log('Không sử dụng proxy');
+            }
+            
+            try {
+                updateUIStartReg();
+                
+                if (typeof eel === 'undefined') {
+                    alert('Backend chưa sẵn sàng!');
+                    updateUIStopReg();
+                    return;
+                }
+                
+                // Gọi hàm Python qua Eel
+                const result = await eel.start_registration(config)();
+                
+                if (result.success) {
+                    console.log('Bắt đầu tạo tài khoản thành công!');
+                } else {
+                    alert('Lỗi: ' + result.message);
+                    updateUIStopReg();
+                }
+            } catch (error) {
+                console.error('Lỗi khi gọi Python:', error);
+                alert('Không thể kết nối với Python backend!');
                 updateUIStopReg();
             }
-        } catch (error) {
-            console.error('Lỗi khi gọi Python:', error);
-            alert('Không thể kết nối với Python backend!');
-            updateUIStopReg();
-        }
-    });
+        });
+    }
     
     // Nút dừng
-    document.getElementById('stop-reg-btn').addEventListener('click', async function() {
-        try {
-            await eel.stop_registration()();
-            updateUIStopReg();
-            console.log('Đã dừng quá trình tạo tài khoản');
-        } catch (error) {
-            console.error('Lỗi khi dừng:', error);
-        }
-    });
+    const stopRegBtn = document.getElementById('stop-reg-btn');
+    if (stopRegBtn) {
+        stopRegBtn.addEventListener('click', async function() {
+            try {
+                if (typeof eel !== 'undefined') {
+                    await eel.stop_registration()();
+                }
+                updateUIStopReg();
+                console.log('Đã dừng quá trình tạo tài khoản');
+            } catch (error) {
+                console.error('Lỗi khi dừng:', error);
+            }
+        });
+    }
     
     // Nút lưu cấu hình
-    document.getElementById('save-config-btn').addEventListener('click', async function() {
-        const config = getRegConfig();
-        
-        try {
-            await eel.save_config(config)();
-            alert('Đã lưu cấu hình thành công!');
-        } catch (error) {
-            console.error('Lỗi khi lưu cấu hình:', error);
-            alert('Không thể lưu cấu hình!');
-        }
-    });
+    const saveConfigBtn = document.getElementById('save-config-btn');
+    if (saveConfigBtn) {
+        saveConfigBtn.addEventListener('click', async function() {
+            const config = getRegConfig();
+            
+            try {
+                if (typeof eel === 'undefined') {
+                    alert('Backend chưa sẵn sàng!');
+                    return;
+                }
+                await eel.save_config(config)();
+                alert('Đã lưu cấu hình thành công!');
+            } catch (error) {
+                console.error('Lỗi khi lưu cấu hình:', error);
+                alert('Không thể lưu cấu hình!');
+            }
+        });
+    }
     
     // Nút test Firefox
-    document.getElementById('test-firefox-btn').addEventListener('click', async function() {
-        const firefoxPath = document.getElementById('firefox-path-input').value;
-        
-        if (!firefoxPath) {
-            alert('Vui lòng chọn đường dẫn Firefox trước!');
-            return;
-        }
-        
-        try {
-            const result = await eel.test_firefox(firefoxPath)();
+    const testFirefoxBtn = document.getElementById('test-firefox-btn');
+    if (testFirefoxBtn) {
+        testFirefoxBtn.addEventListener('click', async function() {
+            const firefoxInput = document.getElementById('firefox-path-input');
+            const firefoxPath = firefoxInput?.value;
             
-            if (result.success) {
-                alert('Test Firefox thành công! ✓');
-            } else {
-                alert('Test Firefox thất bại: ' + result.message);
+            if (!firefoxPath) {
+                alert('Vui lòng chọn đường dẫn Firefox trước!');
+                return;
             }
-        } catch (error) {
-            console.error('Lỗi khi test Firefox:', error);
-            alert('Không thể test Firefox!');
-        }
-    });
+            
+            try {
+                if (typeof eel === 'undefined') {
+                    alert('Backend chưa sẵn sàng!');
+                    return;
+                }
+                const result = await eel.test_firefox(firefoxPath)();
+                
+                if (result.success) {
+                    alert('Test Firefox thành công! ✓');
+                } else {
+                    alert('Test Firefox thất bại: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Lỗi khi test Firefox:', error);
+                alert('Không thể test Firefox!');
+            }
+        });
+    }
     
     // Nút chọn Firefox
-    document.getElementById('firefox-path-btn').addEventListener('click', async function() {
-        try {
-            const path = await eel.select_firefox_path()();
-            if (path) {
-                document.getElementById('firefox-path-input').value = path;
-            } else {
-                alert("⚠️ Không tìm thấy Firefox. Hãy cài đặt hoặc chọn thủ công.");
+    const firefoxPathBtn = document.getElementById('firefox-path-btn');
+    if (firefoxPathBtn) {
+        firefoxPathBtn.addEventListener('click', async function() {
+            try {
+                if (typeof eel === 'undefined') {
+                    alert('Backend chưa sẵn sàng!');
+                    return;
+                }
+                const path = await eel.select_firefox_path()();
+                const firefoxInput = document.getElementById('firefox-path-input');
+                if (path && firefoxInput) {
+                    firefoxInput.value = path;
+                } else {
+                    alert("⚠️ Không tìm thấy Firefox. Hãy cài đặt hoặc chọn thủ công.");
+                }
+            } catch (error) {
+                console.error('Lỗi khi chọn đường dẫn Firefox:', error);
             }
-        } catch (error) {
-            console.error('Lỗi khi chọn đường dẫn Firefox:', error);
-        }
-    });
+        });
+    }
 
     // Nút chọn Geckodriver
-    document.getElementById('geckodriver-path-btn').addEventListener('click', async function() {
-        try {
-            const path = await eel.select_geckodriver_path()();
-            if (path) {
-                document.getElementById('geckodriver-path-input').value = path;
+    const geckodriverPathBtn = document.getElementById('geckodriver-path-btn');
+    if (geckodriverPathBtn) {
+        geckodriverPathBtn.addEventListener('click', async function() {
+            try {
+                if (typeof eel === 'undefined') {
+                    alert('Backend chưa sẵn sàng!');
+                    return;
+                }
+                const path = await eel.select_geckodriver_path()();
+                const geckodriverInput = document.getElementById('geckodriver-path-input');
+                if (path && geckodriverInput) {
+                    geckodriverInput.value = path;
+                }
+            } catch (error) {
+                console.error('Lỗi khi chọn đường dẫn Geckodriver:', error);
             }
-        } catch (error) {
-            console.error('Lỗi khi chọn đường dẫn Geckodriver:', error);
-        }
-    });
+        });
+    }
     
     // Nút export
-    document.getElementById('export-reg-btn').addEventListener('click', async function() {
-        const tbody = document.getElementById('reg-accounts-tbody');
-        const rows = tbody.querySelectorAll('tr:not([colspan])');
-        
-        if (rows.length === 0) {
-            alert('Không có tài khoản nào để export!');
-            return;
-        }
-        
-        const accounts = [];
-        rows.forEach(row => {
-            const rawCookie = row.cells[4].textContent || '';
-            const cleanCookie = rawCookie.replace(/[\r\n]+/g, '').trim();
+    const exportRegBtn = document.getElementById('export-reg-btn');
+    if (exportRegBtn) {
+        exportRegBtn.addEventListener('click', async function() {
+            const tbody = document.getElementById('reg-accounts-tbody');
+            if (!tbody) {
+                console.error('Không tìm thấy reg-accounts-tbody');
+                return;
+            }
+            
+            const rows = tbody.querySelectorAll('tr');
+            const dataRows = Array.from(rows).filter(row => !row.querySelector('td[colspan]'));
+            
+            if (dataRows.length === 0) {
+                alert('Không có tài khoản nào để export!');
+                return;
+            }
+            
+            const accounts = [];
+            dataRows.forEach(row => {
+                const cells = row.cells;
+                if (!cells || cells.length < 5) return;
+                
+                const rawCookie = cells[4]?.textContent || '';
+                const cleanCookie = rawCookie.replace(/[\r\n]+/g, '').trim();
 
-            accounts.push({
-                username: row.cells[1].textContent,
-                email: row.cells[2].textContent,
-                password: row.cells[3].textContent,
-                cookie: cleanCookie
+                accounts.push({
+                    username: cells[1]?.textContent || '',
+                    email: cells[2]?.textContent || '',
+                    password: cells[3]?.textContent || '',
+                    cookie: cleanCookie
+                });
             });
+            
+            try {
+                if (typeof eel === 'undefined') {
+                    alert('Backend chưa sẵn sàng!');
+                    return;
+                }
+                await eel.export_accounts(accounts)();
+                alert('Export thành công!');
+            } catch (error) {
+                console.error('Lỗi khi export:', error);
+                alert('Không thể export tài khoản!');
+            }
         });
-        
-        try {
-            await eel.export_accounts(accounts)();
-            alert('Export thành công!');
-        } catch (error) {
-            console.error('Lỗi khi export:', error);
-            alert('Không thể export tài khoản!');
-        }
-    });
+    }
     
     // Nút xóa hết bảng reg
-    document.getElementById('clear-reg-table').addEventListener('click', function() {
-        if (confirm('Bạn có chắc muốn xóa hết tài khoản đã tạo?')) {
-            const tbody = document.getElementById('reg-accounts-tbody');
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" style="text-align: center; padding: 30px; color: #888;">
-                        <i class="fas fa-inbox"></i><br>
-                        Chưa có tài khoản nào được tạo
-                    </td>
-                </tr>
-            `;
-            document.getElementById('reg-created-count').textContent = '0';
-            document.getElementById('reg-success-rate').textContent = '0%';
-        }
-    });
+    const clearRegTableBtn = document.getElementById('clear-reg-table');
+    if (clearRegTableBtn) {
+        clearRegTableBtn.addEventListener('click', function() {
+            if (confirm('Bạn có chắc muốn xóa hết tài khoản đã tạo?')) {
+                const tbody = document.getElementById('reg-accounts-tbody');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 30px; color: #888;">
+                                <i class="fas fa-inbox"></i><br>
+                                Chưa có tài khoản nào được tạo
+                            </td>
+                        </tr>
+                    `;
+                }
+                const createdEl = document.getElementById('reg-created-count');
+                const rateEl = document.getElementById('reg-success-rate');
+                if (createdEl) createdEl.textContent = '0';
+                if (rateEl) rateEl.textContent = '0%';
+            }
+        });
+    }
 });
 
 // Expose hàm để Python có thể gọi từ Eel
-eel.expose(addAccountToTable);
-eel.expose(updateRegStats);
+if (typeof eel !== 'undefined') {
+    eel.expose(addAccountToTable);
+    eel.expose(updateRegStats);
+}

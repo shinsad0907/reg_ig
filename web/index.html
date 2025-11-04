@@ -77,6 +77,7 @@
                                 <th style="width: 100px;">Followers</th>
                                 <th style="width: 100px;">Following</th>
                                 <th style="width: 80px;">Avatar</th>
+                                <th style="width: 150px;">Bio</th> 
                                 <th style="width: 80px;">Posts</th>
                                 <th style="min-width: 180px;">Proxy</th>
                                 <th style="min-width: 200px;">Cookie</th>
@@ -84,12 +85,10 @@
                             </tr>
                         </thead>
                         <tbody id="manage-tbody">
-                            <tr>
-                                <td colspan="12" style="text-align: center; padding: 30px; color: #888;">
-                                    <i class="fas fa-inbox"></i><br>
-                                    Click chuột phải để thêm tài khoản hoặc Import File
-                                </td>
-                            </tr>
+                            <td colspan="13" style="text-align: center; padding: 30px; color: #888;">
+                                <i class="fas fa-inbox"></i><br>
+                                Click chuột phải để thêm tài khoản hoặc Import File
+                            </td>
                         </tbody>
                     </table>
                 </div>
@@ -203,7 +202,6 @@
                                         <th style="width: 150px;">Username</th>
                                         <th style="width: 180px;">Email</th>
                                         <th style="width: 120px;">Password</th>
-                                        <th style="width: 180px;">Proxy</th>
                                         <th style="min-width: 200px;">Cookie</th>
                                         <th style="width: 100px;">Thao tác</th>
                                     </tr>
@@ -483,27 +481,33 @@
                         <input type="checkbox" id="nuoi-post-status-checkbox" style="width: auto; margin-right: 8px;">
                         <i class="fas fa-pen"></i> Đăng Status
                     </label>
-                    <textarea 
-                        class="form-input" 
-                        id="nuoi-status-input" 
-                        placeholder="Nhập nội dung status (mỗi dòng 1 status)..."
-                        rows="5"
-                        style="resize: vertical; margin-top: 8px;"
-                    ></textarea>
                     <button class="btn-file" id="nuoi-status-file-btn" style="margin-top: 8px;">
-                        <i class="fas fa-file-import"></i> Import từ file
+                        <i class="fas fa-file-import"></i> Import file Status (.txt)
                     </button>
+                    <input type="text" class="form-input" id="nuoi-status-file-input" placeholder="Chưa chọn file..." readonly style="margin-top: 8px;">
+                    
+                    <button class="btn-file" id="nuoi-status-image-folder-btn" style="margin-top: 8px;">
+                        <i class="fas fa-images"></i> Chọn thư mục ảnh Status
+                    </button>
+                    <input type="text" class="form-input" id="nuoi-status-image-folder-input" placeholder="Chưa chọn folder ảnh..." readonly style="margin-top: 8px;">
+                    
+                    <div style="margin-top: 8px; font-size: 10px; color: #888;">
+                        <i class="fas fa-info-circle"></i> Text: <strong id="status-count">0</strong> dòng | Ảnh: <strong id="status-image-count">0</strong>
+                    </div>
                 </div>
 
                 <div class="form-group">
-                    <label><i class="fas fa-network-wired"></i> Proxy (tùy chọn)</label>
-                    <textarea 
-                        class="form-input" 
-                        id="nuoi-proxy-input" 
-                        placeholder="host:port:user:pass"
-                        rows="3"
-                        style="resize: vertical; font-family: 'Courier New', monospace; font-size: 11px;"
-                    ></textarea>
+                    <label>
+                        <input type="checkbox" id="nuoi-update-bio-checkbox" style="width: auto; margin-right: 8px;">
+                        <i class="fas fa-user-edit"></i> Cập nhật Bio
+                    </label>
+                    <button class="btn-file" id="nuoi-bio-file-btn" style="margin-top: 8px;">
+                        <i class="fas fa-file-import"></i> Import file Bio (.txt)
+                    </button>
+                    <input type="text" class="form-input" id="nuoi-bio-file-input" placeholder="Chưa chọn file..." readonly style="margin-top: 8px;">
+                    <div style="margin-top: 8px; font-size: 10px; color: #888;">
+                        <i class="fas fa-info-circle"></i> Đã load: <strong id="bio-count">0</strong> bio
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

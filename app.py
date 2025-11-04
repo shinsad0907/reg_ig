@@ -43,6 +43,8 @@ from selenium.webdriver.support import expected_conditions as EC
 # ==========================================
 from web.src_py.reg_ig import FirefoxManager
 from web.src_py.key import Check_key
+from web.src_py.get_cookie_new import CookieGetter
+from web.src_py.nurture import NurtureAccount
 
 
 # === FIX: Lấy đường dẫn thực khi chạy EXE ===
@@ -472,16 +474,187 @@ def save_xpath_settings(xpath_settings):
 
 @eel.expose
 def start_login(accounts, threads, delay, xpath_settings):
-    """Bắt đầu quá trình login"""
-    data = {
-        'accounts': accounts,
-        'threads': threads,
-        'delay': delay,
-        'xpath_settings': xpath_settings
-    }
-    print(data)
-    return {'success': True, 'message': 'Login started'}
+    """Bắt đầu quá trình login và lấy cookie"""
+    try:
+        print(f"\n🔐 START LOGIN: {len(accounts)} tài khoản | Threads: {threads} | Delay: {delay}s")
+        print(f"📍 XPath Settings: {xpath_settings}")
+        
+        # Chuẩn bị data
+        data = {
+            'accounts': accounts,
+            'threads': threads,
+            'delay': delay,
+            'xpath_settings': xpath_settings
+        }
+        
+        # Khởi tạo CookieGetter và chạy
+        cookie_getter = CookieGetter(data)
+        results = cookie_getter.thread_get_cookie()
+        
+        # Xử lý kết quả
+        print(f"\n📊 KẾT QUẢ:")
+        print(f"   ✅ Thành công: {sum(1 for r in results if r['status'])}")
+        print(f"   ❌ Thất bại: {sum(1 for r in results if not r['status'])}")
+        
+        # Lưu kết quả vào file (optional)
+        try:
+            output_dir = Path('output')
+            output_dir.mkdir(exist_ok=True)
+            
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            result_file = output_dir / f'login_results_{timestamp}.json'
+            
+            with open(result_file, 'w', encoding='utf-8') as f:
+                json.dump(results, f, indent=4, ensure_ascii=False)
+            
+            print(f"💾 Đã lưu kết quả vào: {result_file}")
+        except Exception as e:
+            print(f"⚠️ Không thể lưu kết quả: {e}")
+        
+        return {
+            'success': True, 
+            'message': 'Login hoàn tất!',
+            'results': results
+        }
+        
+    except Exception as e:
+        print(f"❌ Lỗi trong start_login: {e}")
+        return {
+            'success': False,
+            'message': str(e)
+        }
+@eel.expose
+def select_folder_dialog(title='Chọn thư mục'):
+    """Mở dialog chọn folder"""
+    try:
+        root = Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        root.update()
+        
+        folder_path = filedialog.askdirectory(title=title)
+        root.destroy()
+        
+        return folder_path if folder_path else None
+    except Exception as e:
+        print(f"❌ Lỗi select_folder_dialog: {e}")
+        return None
 
+@eel.expose
+def select_status_file_dialog():
+    """Chọn file status (.txt) và đếm số dòng"""
+    try:
+        root = Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        root.update()
+        
+        file_path = filedialog.askopenfilename(
+            title='Chọn file Status (.txt)',
+            filetypes=[
+                ("Text files", "*.txt"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        root.destroy()
+        
+        if not file_path:
+            return None
+        
+        # Đếm số dòng status
+        line_count = 0
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                line_count = len([line for line in f if line.strip()])
+        except:
+            pass
+        
+        print(f"✓ Đã chọn file Status: {file_path} ({line_count} dòng)")
+        
+        return {
+            'file_path': file_path,
+            'line_count': line_count  # ← ĐÃ ĐÚNG
+        }
+        
+    except Exception as e:
+        print(f"❌ Lỗi select_status_file_dialog: {e}")
+        return None
+
+@eel.expose
+def select_image_folder_dialog(title='Chọn thư mục ảnh'):
+    """Chọn folder chứa ảnh và đếm số lượng"""
+    try:
+        root = Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        root.update()
+        
+        folder_path = filedialog.askdirectory(title=title)
+        root.destroy()
+        
+        if not folder_path:
+            return None
+        
+        # Đếm số ảnh (jpg, png, jpeg, gif, webp)
+        image_extensions = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp'}
+        image_count = 0
+        
+        for filename in os.listdir(folder_path):
+            if os.path.splitext(filename)[1].lower() in image_extensions:
+                image_count += 1
+        
+        print(f"✓ Đã chọn folder ảnh: {folder_path} ({image_count} images)")
+        
+        return {
+            'folder': folder_path,
+            'image_count': image_count
+        }
+        
+    except Exception as e:
+        print(f"❌ Lỗi select_image_folder_dialog: {e}")
+        return None
+
+@eel.expose
+def select_bio_file_dialog():
+    """Chọn file bio (.txt) và đếm số dòng"""
+    try:
+        root = Tk()
+        root.withdraw()
+        root.attributes('-topmost', True)
+        root.update()
+        
+        file_path = filedialog.askopenfilename(
+            title='Chọn file Bio (.txt)',
+            filetypes=[
+                ("Text files", "*.txt"),
+                ("All files", "*.*")
+            ]
+        )
+        
+        root.destroy()
+        
+        if not file_path:
+            return None
+        
+        # Đếm số dòng bio
+        bio_count = 0
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                bio_count = len([line for line in f if line.strip()])
+        except:
+            pass
+        
+        print(f"✓ Đã chọn file Bio: {file_path} ({bio_count} bios)")
+        
+        return {
+            'file_path': file_path,
+            'bio_count': bio_count
+        }
+        
+    except Exception as e:
+        print(f"❌ Lỗi select_bio_file_dialog: {e}")
+        return None
 
 @eel.expose
 def start_check_live(accounts, threads, delay):
@@ -500,38 +673,86 @@ def start_check_block(accounts, threads, delay):
 @eel.expose
 def start_nuoi(accounts, config):
     """Bắt đầu quá trình nuôi tài khoản"""
-    print(f"\n🌱 START NUÔI: {len(accounts)} tài khoản | Config: {config}")
-    return {'success': True, 'message': 'Nuoi started'}
+    try:
+        print(f"\n🌱 START NUÔI: {len(accounts)} tài khoản")
+        print(f"⚙️  Config: {config}")
+        
+        # Chuẩn bị data
+        data = {
+            'accounts': accounts,
+            'config': config
+        }
+        print(data)
+        # Import class nuôi tài khoản
+        # Khởi tạo và chạy
+        nurture = NurtureAccount(data)
+        results = nurture.thread_get_cookie()
+        
+        # Xử lý kết quả
+        print(f"\n📊 KẾT QUẢ NUÔI:")
+        print(f"   ✅ Thành công: {sum(1 for r in results if r.get('status'))}")
+        print(f"   ❌ Thất bại: {sum(1 for r in results if not r.get('status'))}")
+        
+        # Lưu kết quả (optional)
+        try:
+            output_dir = Path('output')
+            output_dir.mkdir(exist_ok=True)
+            
+            timestamp = time.strftime("%Y%m%d_%H%M%S")
+            result_file = output_dir / f'nuoi_results_{timestamp}.json'
+            
+            with open(result_file, 'w', encoding='utf-8') as f:
+                json.dump(results, f, indent=4, ensure_ascii=False)
+            
+            print(f"💾 Đã lưu kết quả vào: {result_file}")
+        except Exception as e:
+            print(f"⚠️ Không thể lưu kết quả: {e}")
+        
+        return {
+            'success': True, 
+            'message': 'Nuôi tài khoản hoàn tất!',
+            'results': results
+        }
+        
+    except Exception as e:
+        print(f"❌ Lỗi trong start_nuoi: {e}")
+        import traceback
+        traceback.print_exc()
+        return {
+            'success': False,
+            'message': str(e)
+        }
 # === CHẠY ỨNG DỤNG ===
 if __name__ == '__main__':
-    try:
-        # Tạo thư mục data nếu chưa có
-        Path('data').mkdir(exist_ok=True)
+    # try:
+    #     # Tạo thư mục data nếu chưa có
+    #     Path('data').mkdir(exist_ok=True)
         
-        # Kiểm tra key
-        try:
-            with open(r'data/key.json', "r", encoding="utf-8") as f:
-                key_data = json.load(f)
+    #     # Kiểm tra key
+    #     try:
+    #         with open(r'data/key.json', "r", encoding="utf-8") as f:
+    #             key_data = json.load(f)
             
-            with open(r'data/version_client.json', 'r', encoding="utf-8-sig") as versiondata:
-                version = json.load(versiondata)
+    #         with open(r'data/version_client.json', 'r', encoding="utf-8-sig") as versiondata:
+    #             version = json.load(versiondata)
             
-            status_checkkey = Check_key().check_update(key_data['key'], version)
+    #         status_checkkey = Check_key().check_update(key_data['key'], version)
             
-            if status_checkkey['data'] == True:
-                eel.start('index.html', size=(1200, 800), port=6060)
-            else:
-                os.remove('data/key.json')
-                eel.start('key.html', size=(400, 600), port=6060)
+    #         if status_checkkey['data'] ==  True:
+    #             eel.start('index.html', size=(1200, 800), port=6060)
+    #         else:
+    #             os.remove('data/key.json')
+    #             eel.start('key.html', size=(400, 600), port=6060)
         
-        except FileNotFoundError:
-            print("⚠️ Chưa có file key.json, mở màn hình nhập key")
-            eel.start('key.html', size=(400, 600), port=6060)
+    #     except FileNotFoundError:
+    #         print("⚠️ Chưa có file key.json, mở màn hình nhập key")
+    #         eel.start('key.html', size=(400, 600), port=6060)
         
-        except Exception as e:
-            print(f"❌ Lỗi: {e}")
-            eel.start('key.html', size=(400, 600), port=6060)
+    #     except Exception as e:
+    #         print(f"❌ Lỗi: {e}")
+    #         eel.start('key.html', size=(400, 600), port=6060)
     
-    except Exception as e:
-        print(f"❌ Lỗi nghiêm trọng: {e}")
-        input("Nhấn Enter để thoát...")
+    # except Exception as e:
+    #     print(f"❌ Lỗi nghiêm trọng: {e}")
+    #     input("Nhấn Enter để thoát...")
+    eel.start('index.html', size=(1200, 800), port=6062)
