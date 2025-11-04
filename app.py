@@ -43,7 +43,7 @@ from selenium.webdriver.support import expected_conditions as EC
 # ==========================================
 from web.src_py.reg_ig import FirefoxManager
 from web.src_py.key import Check_key
-from web.src_py.get_cookie_new import CookieGetter
+# from web.src_py.get_cookie_new import CookieGetter
 from web.src_py.nurture import NurtureAccount
 
 
@@ -472,57 +472,57 @@ def save_xpath_settings(xpath_settings):
         return {'success': False, 'message': str(e)}
 
 
-@eel.expose
-def start_login(accounts, threads, delay, xpath_settings):
-    """Bắt đầu quá trình login và lấy cookie"""
-    try:
-        print(f"\n🔐 START LOGIN: {len(accounts)} tài khoản | Threads: {threads} | Delay: {delay}s")
-        print(f"📍 XPath Settings: {xpath_settings}")
+# @eel.expose
+# def start_login(accounts, threads, delay, xpath_settings):
+#     """Bắt đầu quá trình login và lấy cookie"""
+#     try:
+#         print(f"\n🔐 START LOGIN: {len(accounts)} tài khoản | Threads: {threads} | Delay: {delay}s")
+#         print(f"📍 XPath Settings: {xpath_settings}")
         
-        # Chuẩn bị data
-        data = {
-            'accounts': accounts,
-            'threads': threads,
-            'delay': delay,
-            'xpath_settings': xpath_settings
-        }
+#         # Chuẩn bị data
+#         data = {
+#             'accounts': accounts,
+#             'threads': threads,
+#             'delay': delay,
+#             'xpath_settings': xpath_settings
+#         }
         
-        # Khởi tạo CookieGetter và chạy
-        cookie_getter = CookieGetter(data)
-        results = cookie_getter.thread_get_cookie()
+#         # Khởi tạo CookieGetter và chạy
+#         cookie_getter = CookieGetter(data)
+#         results = cookie_getter.thread_get_cookie()
         
-        # Xử lý kết quả
-        print(f"\n📊 KẾT QUẢ:")
-        print(f"   ✅ Thành công: {sum(1 for r in results if r['status'])}")
-        print(f"   ❌ Thất bại: {sum(1 for r in results if not r['status'])}")
+#         # Xử lý kết quả
+#         print(f"\n📊 KẾT QUẢ:")
+#         print(f"   ✅ Thành công: {sum(1 for r in results if r['status'])}")
+#         print(f"   ❌ Thất bại: {sum(1 for r in results if not r['status'])}")
         
-        # Lưu kết quả vào file (optional)
-        try:
-            output_dir = Path('output')
-            output_dir.mkdir(exist_ok=True)
+#         # Lưu kết quả vào file (optional)
+#         try:
+#             output_dir = Path('output')
+#             output_dir.mkdir(exist_ok=True)
             
-            timestamp = time.strftime("%Y%m%d_%H%M%S")
-            result_file = output_dir / f'login_results_{timestamp}.json'
+#             timestamp = time.strftime("%Y%m%d_%H%M%S")
+#             result_file = output_dir / f'login_results_{timestamp}.json'
             
-            with open(result_file, 'w', encoding='utf-8') as f:
-                json.dump(results, f, indent=4, ensure_ascii=False)
+#             with open(result_file, 'w', encoding='utf-8') as f:
+#                 json.dump(results, f, indent=4, ensure_ascii=False)
             
-            print(f"💾 Đã lưu kết quả vào: {result_file}")
-        except Exception as e:
-            print(f"⚠️ Không thể lưu kết quả: {e}")
+#             print(f"💾 Đã lưu kết quả vào: {result_file}")
+#         except Exception as e:
+#             print(f"⚠️ Không thể lưu kết quả: {e}")
         
-        return {
-            'success': True, 
-            'message': 'Login hoàn tất!',
-            'results': results
-        }
+#         return {
+#             'success': True, 
+#             'message': 'Login hoàn tất!',
+#             'results': results
+#         }
         
-    except Exception as e:
-        print(f"❌ Lỗi trong start_login: {e}")
-        return {
-            'success': False,
-            'message': str(e)
-        }
+#     except Exception as e:
+#         print(f"❌ Lỗi trong start_login: {e}")
+#         return {
+#             'success': False,
+#             'message': str(e)
+#         }
 @eel.expose
 def select_folder_dialog(title='Chọn thư mục'):
     """Mở dialog chọn folder"""
@@ -724,35 +724,35 @@ def start_nuoi(accounts, config):
         }
 # === CHẠY ỨNG DỤNG ===
 if __name__ == '__main__':
-    # try:
-    #     # Tạo thư mục data nếu chưa có
-    #     Path('data').mkdir(exist_ok=True)
+    try:
+        # Tạo thư mục data nếu chưa có
+        Path('data').mkdir(exist_ok=True)
         
-    #     # Kiểm tra key
-    #     try:
-    #         with open(r'data/key.json', "r", encoding="utf-8") as f:
-    #             key_data = json.load(f)
+        # Kiểm tra key
+        try:
+            with open(r'data/key.json', "r", encoding="utf-8") as f:
+                key_data = json.load(f)
             
-    #         with open(r'data/version_client.json', 'r', encoding="utf-8-sig") as versiondata:
-    #             version = json.load(versiondata)
+            with open(r'data/version_client.json', 'r', encoding="utf-8-sig") as versiondata:
+                version = json.load(versiondata)
             
-    #         status_checkkey = Check_key().check_update(key_data['key'], version)
+            status_checkkey = Check_key().check_update(key_data['key'], version)
             
-    #         if status_checkkey['data'] ==  True:
-    #             eel.start('index.html', size=(1200, 800), port=6060)
-    #         else:
-    #             os.remove('data/key.json')
-    #             eel.start('key.html', size=(400, 600), port=6060)
+            if status_checkkey['data'] ==  True:
+                eel.start('index.html', size=(1200, 800), port=6060)
+            else:
+                os.remove('data/key.json')
+                eel.start('key.html', size=(400, 600), port=6060)
         
-    #     except FileNotFoundError:
-    #         print("⚠️ Chưa có file key.json, mở màn hình nhập key")
-    #         eel.start('key.html', size=(400, 600), port=6060)
+        except FileNotFoundError:
+            print("⚠️ Chưa có file key.json, mở màn hình nhập key")
+            eel.start('key.html', size=(400, 600), port=6060)
         
-    #     except Exception as e:
-    #         print(f"❌ Lỗi: {e}")
-    #         eel.start('key.html', size=(400, 600), port=6060)
+        except Exception as e:
+            print(f"❌ Lỗi: {e}")
+            eel.start('key.html', size=(400, 600), port=6060)
     
-    # except Exception as e:
-    #     print(f"❌ Lỗi nghiêm trọng: {e}")
-    #     input("Nhấn Enter để thoát...")
-    eel.start('index.html', size=(1200, 800), port=6062)
+    except Exception as e:
+        print(f"❌ Lỗi nghiêm trọng: {e}")
+        input("Nhấn Enter để thoát...")
+    # eel.start('index.html', size=(1200, 800), port=6062)
