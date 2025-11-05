@@ -51,17 +51,17 @@ class FirefoxManager:
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
             # 'cookie': '_ga=GA1.1.32425121.1758029713; user_id=588d655f-89d6-492d-b427-58b851b32ef6; cto_bundle=6G0p5F8yTGlMY3JZVUNkTEJZUUtuemxCa3VSJTJGcDNJZ3JyUnA0OGRFZUJKQzdTWlVZR1hLaWRxV3cyQWdRaUZ5cjdJU3NCZTg3Y2tOWEZDeDFMMVlPUmFiZlJ2TXMyOEVobyUyRmdleFlGZzAlMkZtVGJXJTJCZVVNVkNRbVRMb0tHcmclMkZ1cFhvZERhVlhtZVV6c3ROR2ZpaiUyQlRtTnNQaWclM0QlM0Q; cto_bidid=Dw6GzF9HbXk1Q3BTQUtNJTJCMml6QyUyQnJ5R3V1b1ElMkI5d3lzeWZJTjM0S213eGdZWFQ5TW55dUo2ZTdPNE4yME5xNVJ2NFRFMFRsdXNDU3Q4Rk04Q1ZaazJUUExoSlBsbW0wZU5xV3RIdmhtRkNteEpsUnBYJTJGREJtWWtYTjJ5RDJkbHBWR3l1; _pbjs_userid_consent_data=3524755945110770; _ga_4TBVMLYBBP=GS2.1.s1758079326$o4$g1$t1758079345$j41$l0$h0; __gads=ID=7622753cf5bf69f8:T=1758029716:RT=1758080739:S=ALNI_MZFIDWsHp_hZY3MkI7dwOBpsCEwIQ; __gpi=UID=0000114995a45b45:T=1758029716:RT=1758080739:S=ALNI_MYVHS4hT3c2xX-t1p-KZCuo7OXvYA; __eoi=ID=3e8de482b5ed8267:T=1758029716:RT=1758080739:S=AA-AfjZ8ZT1VjwxYo6PY8BMW8TCT; _ga_MSFG3B015Z=GS2.1.s1760467989$o6$g1$t1760469468$j59$l0$h0',
         }
-    def get_proxy(self, key):
+    # def get_proxy(self, key):
 
-        re = requests.get(f'https://api.kiotproxy.com/api/v1/proxies/new?key={key}&region=bac').json()
-        if re['status'] == 'FAIL':
-            re =  requests.get(f'https://api.kiotproxy.com/api/v1/proxies/current?key={key}').json()
-            proxy = re['data']['http']
-        else:
-            re =  requests.get(f'https://api.kiotproxy.com/api/v1/proxies/current?key={key}').json()
-            proxy = re['data']['http']
+    #     re = requests.get(f'https://api.kiotproxy.com/api/v1/proxies/new?key={key}&region=bac').json()
+    #     if re['status'] == 'FAIL':
+    #         re =  requests.get(f'https://api.kiotproxy.com/api/v1/proxies/current?key={key}').json()
+    #         proxy = re['data']['http']
+    #     else:
+    #         re =  requests.get(f'https://api.kiotproxy.com/api/v1/proxies/current?key={key}').json()
+    #         proxy = re['data']['http']
         
-        return proxy
+    #     return proxy
     # ===================== KHỞI TẠO TRÌNH DUYỆT ===================== #
     def _init_driver(self, index):
         temp_profile = tempfile.mkdtemp(prefix=f"firefox_profile_{index}_")
@@ -77,17 +77,17 @@ class FirefoxManager:
         proxy_conf = None
         if self.proxy_list:
             proxy_raw = self.proxy_list[index % len(self.proxy_list)]
-            proxy = self.get_proxy(proxy_raw)
+            # proxy = self.get_proxy(proxy_raw)
 
             # Tự động nhận dạng và chuyển định dạng proxy
-            parts = proxy.split(':')
+            parts = proxy_raw.split(':')
             if len(parts) == 4:
                 host, port, user, pwd = parts
                 proxy_str = f"{user}:{pwd}@{host}:{port}"
-            elif '@' in proxy:
-                proxy_str = proxy  # đã đúng dạng USER:PASS@HOST:PORT
+            elif '@' in proxy_raw:
+                proxy_str = proxy_raw  # đã đúng dạng USER:PASS@HOST:PORT
             else:
-                proxy_str = proxy  # dạng IP:PORT
+                proxy_str = proxy_raw  # dạng IP:PORT
 
             proxy_conf = {
                 "proxy": {

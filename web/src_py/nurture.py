@@ -22,8 +22,10 @@ class NurtureAccount:
         self.firefox_path = data['config']['xpaths']['firefox']
         self.geckodriver_path = data['config']['xpaths']['geckodriver']
         self.config = data['config']
-        self.results = []  # ✅ Lưu kết quả
-        self.lock = threading.Lock()  # ✅ Lock cho thread-safe
+        self.results = []
+        self.lock = threading.Lock()
+        self.window_index_counter = 0  # ✅ Counter để tracking vị trí cửa sổ
+        self.window_index_lock = threading.Lock()  # ✅ Lock cho counter
         
         self.cookies = {
             '_ga': 'GA1.1.32425121.1758029713',
@@ -52,8 +54,24 @@ class NurtureAccount:
             'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36',
         }
 
-    def _init_driver(self, index, proxy):
-        temp_profile = tempfile.mkdtemp(prefix=f"firefox_profile_{index}_")
+    def _get_next_window_index(self):
+        """✅ Lấy index tiếp theo cho cửa sổ browser (thread-safe)"""
+        with self.window_index_lock:
+            index = self.window_index_counter
+            self.window_index_counter += 1
+            return index
+
+    def _reset_window_counter(self):
+        """✅ Reset counter về 0 khi bắt đầu batch mới"""
+        with self.window_index_lock:
+            self.window_index_counter = 0
+            print(f"🔄 Reset window counter về 0")
+
+    def _init_driver(self, proxy):
+        """✅ Khởi tạo driver với vị trí được tính toán tự động"""
+        window_index = self._get_next_window_index()
+        
+        temp_profile = tempfile.mkdtemp(prefix=f"firefox_profile_{window_index}_")
 
         options = Options()
         if self.firefox_path:
@@ -61,7 +79,7 @@ class NurtureAccount:
         options.set_preference("profile", temp_profile)
         options.add_argument("--width=400")
         options.add_argument("--height=600")
-        print(proxy)
+        print(f"[Window-{window_index}] Proxy: {proxy}")
         
         proxy_conf = None
         if proxy:
@@ -82,22 +100,31 @@ class NurtureAccount:
                 }
             }
 
-            print(f"[PROXY] 🧩 Gán proxy cho Thread-{index}: {proxy_str}")
+            print(f"[PROXY] 🧩 Gán proxy cho Window-{window_index}: {proxy_str}")
         else:
             proxy_conf = {}
 
         service = Service(self.geckodriver_path)
         driver = webdriver.Firefox(service=service, options=options, seleniumwire_options=proxy_conf)
 
+        # ✅ Tính toán vị trí dựa trên window_index
         SCREEN_WIDTH = 1920
         WINDOW_WIDTH = 400
         WINDOW_HEIGHT = 600
         COLUMNS = SCREEN_WIDTH // WINDOW_WIDTH
-        row = index // COLUMNS
-        col = index % COLUMNS
-        driver.set_window_position(col * WINDOW_WIDTH, row * WINDOW_HEIGHT)
+        
+        row = window_index // COLUMNS
+        col = window_index % COLUMNS
+        
+        x_pos = col * WINDOW_WIDTH
+        y_pos = row * WINDOW_HEIGHT
+        
+        print(f"[Window-{window_index}] 📍 Vị trí: ({x_pos}, {y_pos}) - Row {row}, Col {col}")
+        
+        driver.set_window_position(x_pos, y_pos)
         driver.get('https://www.instagram.com/')
         return driver
+
     def wait_and_click(self, locator, locator_type="xpath", timeout=60, driver=None):
         driver = driver or self.driver
         
@@ -111,12 +138,10 @@ class NurtureAccount:
             raise ValueError("Unsupported locator type")
 
         try:
-            # ✅ 1. Đợi element xuất hiện
             element = WebDriverWait(driver, timeout).until(
                 EC.presence_of_element_located((by, locator))
             )
             
-            # ✅ 2. Scroll element vào giữa màn hình
             driver.execute_script("""
                 arguments[0].scrollIntoView({
                     behavior: 'smooth',
@@ -126,19 +151,15 @@ class NurtureAccount:
             """, element)
             sleep(0.5)
             
-            # ✅ 3. Đợi element clickable
             element = WebDriverWait(driver, timeout).until(
                 EC.element_to_be_clickable((by, locator))
             )
             
-            # ✅ 4. Thử click thông thường trước
             try:
                 element.click()
                 print(f"✓ Click thành công: {locator[:50]}...")
             except Exception as click_error:
                 print(f"⚠️ Click thất bại, dùng JavaScript: {click_error}")
-                
-                # ✅ 5. Dùng JavaScript click nếu bị chặn
                 driver.execute_script("arguments[0].click();", element)
                 print(f"✓ JavaScript click thành công")
             
@@ -179,6 +200,7 @@ class NurtureAccount:
             EC.presence_of_element_located((By.XPATH, xpath))
         )
         return element.text
+
     def parse_cookie_string(self, cookie_str: str, percent_decode: bool = False) -> dict:
         cookies = {}
         if not cookie_str:
@@ -195,7 +217,6 @@ class NurtureAccount:
         return cookies
     
     def addcookie(self, driver, cookie):
-        # Set cookies
         cookies = self.parse_cookie_string(cookie, percent_decode=False)
         
         print("Đang set cookies...")
@@ -211,7 +232,6 @@ class NurtureAccount:
         try:
             bio_xpath = self.config['bioFilePath']
             
-            # ✅ Thông báo bắt đầu
             if callable(getattr(eel, 'updateNurtureProgress', None)):
                 eel.updateNurtureProgress(username, 'bio', 'start', None)
             
@@ -225,7 +245,6 @@ class NurtureAccount:
             self.wait_and_click('/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[1]/div[1]/section/main/div/div[3]/div/div/form/div[5]/div', driver=driver)
             time.sleep(5)
             
-            # ✅ Thông báo thành công
             if callable(getattr(eel, 'updateNurtureProgress', None)):
                 eel.updateNurtureProgress(username, 'bio', 'success', {'bio': bio})
             
@@ -233,7 +252,6 @@ class NurtureAccount:
         except Exception as e:
             print(f"❌ Lỗi upload_bio: {e}")
             
-            # ✅ Thông báo thất bại
             if callable(getattr(eel, 'updateNurtureProgress', None)):
                 eel.updateNurtureProgress(username, 'bio', 'error', {'message': str(e)})
             
@@ -241,19 +259,16 @@ class NurtureAccount:
 
     def upload_status(self, driver, username):
         try:
-            # ✅ Thông báo bắt đầu upload status
             if callable(getattr(eel, 'updateNurtureProgress', None)):
                 eel.updateNurtureProgress(username, 'post', 'start', None)
             
             image_path = self.config['statusImageFolder']
             caption_path = self.config['statusFile']
 
-            # Đọc caption ngẫu nhiên
             with open(caption_path, 'r', encoding='utf-8') as f:
                 captions = f.readlines()
                 caption = random.choice(captions).strip()
             
-            # Lấy file ảnh ngẫu nhiên
             file_names = [f for f in os.listdir(image_path) if os.path.isfile(os.path.join(image_path, f))]
             if not file_names:
                 print("⚠️ Thư mục không có file ảnh nào.")
@@ -265,11 +280,9 @@ class NurtureAccount:
             full_image_path = os.path.join(image_path, random_file)
             print(f"🎲 File ảnh được chọn: {random_file}")
 
-            # Truy cập trang profile
             driver.get(f"https://www.instagram.com/{username}/")
             time.sleep(4)
 
-            # ✅ CLICK NÚT TẠO BÀI VIẾT
             print("🔘 Đang tìm nút tạo bài viết...")
             
             create_post_selectors = [
@@ -293,7 +306,6 @@ class NurtureAccount:
                     eel.updateNurtureProgress(username, 'post', 'error', {'message': 'Không tìm thấy nút tạo'})
                 return False
             
-            # ✅ SCROLL + CLICK
             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", create_button)
             time.sleep(1)
             
@@ -306,7 +318,6 @@ class NurtureAccount:
             print("✓ Đã click nút tạo bài viết")
             time.sleep(3)
 
-            # ===== UPLOAD ẢNH =====
             print("🔍 Đang tìm input file để upload ảnh...")
             
             time.sleep(2)
@@ -350,7 +361,6 @@ class NurtureAccount:
             print("⏳ Đang đợi Instagram xử lý ảnh...")
             time.sleep(8)
             
-            # ===== CLICK NÚT NEXT LẦN 1 (SAU KHI UPLOAD ẢNH) =====
             print("🔍 Đang click nút Next lần 1...")
             
             result1 = driver.execute_script("""
@@ -370,7 +380,6 @@ class NurtureAccount:
                     }
                 }
                 
-                // Fallback: click button cuối cùng trong header
                 var headerButtons = dialog.querySelectorAll('header button, header div[role="button"]');
                 if (headerButtons.length > 0) {
                     var lastBtn = headerButtons[headerButtons.length - 1];
@@ -391,32 +400,27 @@ class NurtureAccount:
             print(f"✅ {result1.get('message')}")
             time.sleep(3)
             
-            # ===== CLICK NÚT NEXT LẦN 2 (SAU KHI CHỈNH SỬA) =====
             print("🔍 Đang click nút Next lần 2...")
             
             result2 = driver.execute_script("""
                 var dialog = document.querySelector('div[role="dialog"]');
                 if (!dialog) return {success: false, message: 'Không tìm thấy dialog'};
                 
-                // Đợi một chút để đảm bảo UI đã render
                 var attempts = 0;
                 var maxAttempts = 5;
                 
                 function tryClickNext() {
                     attempts++;
                     
-                    // Tìm tất cả buttons
                     var buttons = dialog.querySelectorAll('button, div[role="button"]');
                     console.log('Số lượng buttons tìm thấy:', buttons.length);
                     
-                    // Ưu tiên 1: Tìm button có text "Next" hoặc "Tiếp"
                     for (var i = 0; i < buttons.length; i++) {
                         var btn = buttons[i];
                         var text = btn.innerText.toLowerCase().trim();
                         console.log('Button', i, ':', text);
                         
                         if (text === 'next' || text === 'tiếp' || text.includes('next') || text.includes('tiếp')) {
-                            // Kiểm tra button có visible không
                             var style = window.getComputedStyle(btn);
                             if (style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0') {
                                 btn.scrollIntoView({block: 'center', behavior: 'smooth'});
@@ -426,12 +430,10 @@ class NurtureAccount:
                         }
                     }
                     
-                    // Ưu tiên 2: Tìm button trong header (thường là Next)
                     var headerButtons = dialog.querySelectorAll('header button, header div[role="button"]');
                     console.log('Số buttons trong header:', headerButtons.length);
                     
                     if (headerButtons.length > 0) {
-                        // Click button cuối cùng (thường là Next)
                         var lastBtn = headerButtons[headerButtons.length - 1];
                         var lastStyle = window.getComputedStyle(lastBtn);
                         
@@ -442,14 +444,12 @@ class NurtureAccount:
                         }
                     }
                     
-                    // Ưu tiên 3: Tìm bất kỳ button clickable nào ở góc phải trên
                     var allButtons = dialog.querySelectorAll('button');
                     for (var j = 0; j < allButtons.length; j++) {
                         var b = allButtons[j];
                         var rect = b.getBoundingClientRect();
                         var dialogRect = dialog.getBoundingClientRect();
                         
-                        // Kiểm tra button nằm ở góc phải trên của dialog
                         if (rect.right > dialogRect.right - 100 && rect.top < dialogRect.top + 100) {
                             var bStyle = window.getComputedStyle(b);
                             if (bStyle.display !== 'none' && bStyle.visibility !== 'hidden') {
@@ -460,15 +460,13 @@ class NurtureAccount:
                         }
                     }
                     
-                    // Retry nếu chưa đủ số lần
                     if (attempts < maxAttempts) {
-                        return null; // Signal to retry
+                        return null;
                     }
                     
                     return {success: false, message: 'Không tìm thấy nút Next lần 2 sau ' + attempts + ' lần thử'};
                 }
                 
-                // Thử click, retry nếu cần
                 var result = tryClickNext();
                 return result || {success: false, message: 'Không thể click Next lần 2'};
             """)
@@ -482,7 +480,6 @@ class NurtureAccount:
             print(f"✅ {result2.get('message')}")
             time.sleep(3)
             
-            # ===== NHẬP CAPTION =====
             print("📝 Đang nhập caption...")
             
             caption_xpaths = [
@@ -509,7 +506,6 @@ class NurtureAccount:
                     time.sleep(0.5)
                     caption_input.clear()
                     
-                    # Nhập caption từng ký tự
                     for char in caption:
                         caption_input.send_keys(char)
                         time.sleep(random.uniform(0.05, 0.15))
@@ -517,7 +513,6 @@ class NurtureAccount:
                     print(f"✅ Đã nhập caption: {caption[:30]}...")
                 except Exception as e:
                     print(f"⚠️ Lỗi nhập caption: {e}")
-                    # Thử dùng JS
                     driver.execute_script("""
                         arguments[0].focus();
                         arguments[0].textContent = arguments[1];
@@ -529,7 +524,6 @@ class NurtureAccount:
             
             time.sleep(3)
             
-            # ===== CLICK NÚT SHARE =====
             print("🔍 Đang tìm nút Share...")
             
             result3 = driver.execute_script("""
@@ -549,7 +543,6 @@ class NurtureAccount:
                     }
                 }
                 
-                // Thử click button cuối cùng (thường là Share)
                 var headerButtons = dialog.querySelectorAll('header button, header div[role="button"]');
                 if (headerButtons.length > 0) {
                     var lastBtn = headerButtons[headerButtons.length - 1];
@@ -571,7 +564,6 @@ class NurtureAccount:
             print("✅ Đã click Share, đang đợi upload hoàn tất...")
             time.sleep(10)
             
-            # ✅ Thông báo thành công
             if callable(getattr(eel, 'updateNurtureProgress', None)):
                 eel.updateNurtureProgress(username, 'post', 'success', None)
             
@@ -591,15 +583,12 @@ class NurtureAccount:
         try:
             folder_path = fr"{self.config['avatarFolder']}"
 
-            # Lấy danh sách file trong thư mục (chỉ lấy file, bỏ qua thư mục con)
             file_names = [f for f in os.listdir(folder_path) if os.path.isfile(os.path.join(folder_path, f))]
 
-            # Kiểm tra nếu thư mục rỗng
             if not file_names:
                 print("⚠️ Thư mục không có file nào.")
                 return False
             
-            # Random chọn 1 file ngẫu nhiên
             random_file = random.choice(file_names)
             print("🎲 File ngẫu nhiên được chọn là:")
             print(random_file)
@@ -611,20 +600,12 @@ class NurtureAccount:
             
             print("Đang tìm input file trong nút avatar...")
             
-            # XPath của nút avatar
             avatar_button_xpath = "/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[2]/div[1]/section/main/div/div/header/div/section[1]/div/div/div/div[2]/span/div/div/div/button"
             
-            # Tìm input file bên trong hoặc xung quanh button
             input_xpaths = [
-                # Input bên trong button
                 avatar_button_xpath + "//input[@type='file']",
-                # Input là con trực tiếp
                 avatar_button_xpath + "/input[@type='file']",
-                # Input anh em với button
-                "/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[2]/div[1]/section/main/div/div/header/div/section[1]/div/div/div/div[2]/span/div/div/div//input[@type='file']",
-                # Input ở parent của button
                 "/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[2]/div[1]/section/main/div/div/header/div/section[1]/div/div/div/div[2]/span//input[@type='file']",
-                # Tìm tất cả input trong khu vực avatar
                 "/html/body/div[1]/div/div/div[2]/div/div/div[1]/div[2]/div[1]/section/main/div/div/header/div/section[1]//input[@type='file']"
             ]
             
@@ -646,7 +627,6 @@ class NurtureAccount:
                 print("\n❌ Không tìm thấy input file có sẵn!")
                 print("Đang dùng JavaScript để tìm...")
                 
-                # Dùng JS để tìm tất cả input file và lấy info
                 inputs_info = driver.execute_script("""
                     var inputs = document.querySelectorAll('input[type="file"]');
                     var result = [];
@@ -667,7 +647,6 @@ class NurtureAccount:
                 for info in inputs_info:
                     print(f"  - Input {info['index']}: id={info['id']}, name={info['name']}, accept={info['accept']}, visible={info['isVisible']}")
                 
-                # Lấy input đầu tiên (thường là avatar)
                 if inputs_info:
                     all_inputs = driver.find_elements(By.XPATH, "//input[@type='file']")
                     if all_inputs:
@@ -677,7 +656,6 @@ class NurtureAccount:
             if file_input:
                 print("\n✅ Đã tìm thấy input file!")
                 
-                # Hiện input lên để có thể tương tác
                 driver.execute_script("""
                     var input = arguments[0];
                     input.style.display = 'block';
@@ -701,7 +679,6 @@ class NurtureAccount:
                 
                 time.sleep(3)
                 
-                # Trigger events
                 driver.execute_script("""
                     var input = arguments[0];
                     if (input.files && input.files.length > 0) {
@@ -725,15 +702,16 @@ class NurtureAccount:
             traceback.print_exc()
             return False
 
-    def nurture(self, acc, i):
+    def nurture(self, acc):
+        """✅ Xử lý 1 account - không cần index nữa"""
         driver = None
         try:
-            driver = self._init_driver(i, acc['proxy'])
+            # ✅ Tự động lấy vị trí từ counter
+            driver = self._init_driver(acc['proxy'])
             self.addcookie(driver, acc['cookie'])
             
             username = acc['username']
             
-            # ✅ Thông báo bắt đầu
             if callable(getattr(eel, 'updateNurtureProgress', None)):
                 eel.updateNurtureProgress(username, 'start', 'checking', None)
             
@@ -778,15 +756,14 @@ class NurtureAccount:
                 else:
                     print(f"[{username}] ❌ Upload status thất bại!")
             
-            # ===== ← THÊM UPLOAD BIO =====
-            bio_text = None  # Lưu bio để trả về
+            # ===== UPLOAD BIO =====
+            bio_text = None
             if self.config['updateBio']:
                 print(f"[{username}] 📋 Đang upload bio...")
                 
                 bio_result = self.upload_bio(driver, username)
                 if bio_result:
                     print(f"[{username}] ✅ Upload bio thành công!")
-                    # Lấy bio từ file để trả về
                     try:
                         with open(self.config['bioFilePath'], 'r', encoding='utf-8') as f:
                             bios = f.readlines()
@@ -801,7 +778,7 @@ class NurtureAccount:
                 final_data = {
                     'hasAvatar': self.config['uploadAvatar'],
                     'posts': 1 if self.config['postStatus'] else 0,
-                    'bio': bio_text if self.config['updateBio'] else None,  # ← THÊM BIO
+                    'bio': bio_text if self.config['updateBio'] else None,
                     'following': 0
                 }
                 eel.updateNurtureProgress(username, 'complete', 'success', final_data)
@@ -809,7 +786,7 @@ class NurtureAccount:
             return {
                 "status": True,
                 "username": username,
-                "bio": bio_text  # ← THÊM VÀO RETURN
+                "bio": bio_text
             }
             
         except Exception as e:
@@ -854,17 +831,21 @@ class NurtureAccount:
         print(f"⚙️  Luồng: {max_threads} | Delay: {delay}s")
         print(f"{'='*60}\n")
 
+        # ✅ Reset counter về 0 trước khi bắt đầu batch mới
+        self._reset_window_counter()
+
         active_threads = []
         for i, acc in enumerate(accounts):
             while len(active_threads) >= max_threads:
                 active_threads = [t for t in active_threads if t.is_alive()]
                 time.sleep(0.1)
 
-            t = threading.Thread(target=self.nurture, args=(acc, i), daemon=True)
+            # ✅ Không truyền index nữa, hàm nurture tự lấy từ counter
+            t = threading.Thread(target=self.nurture, args=(acc,), daemon=True)
             t.start()
             active_threads.append(t)
             
-            print(f"[MAIN] 🚀 Đã khởi động Thread-{i}")
+            print(f"[MAIN] 🚀 Đã khởi động Thread cho {acc['username']}")
             
             time.sleep(delay)
 
@@ -877,51 +858,4 @@ class NurtureAccount:
         print(f"📊 Kết quả: {len(self.results)} accounts đã xử lý")
         print(f"{'='*60}\n")
         
-        # ✅ Trả về kết quả
         return self.results
-        
-    
-# data = {
-#   "accounts": [
-#     {
-#       "username": "humogo3360",
-#       "password": "Instagram@123",
-#       "email": "humogo3360@vomoto.com",
-#       "cookie": "csrftoken=6FWCMvaNhrNxsZFnxk8x9y; datr=mqz4aLunV48iINU5OK8k_RWX; ig_did=08422A65-C95E-486A-8F54-80A97A101EB3; wd=500x515; mid=aPismwALAAEPzmQMdvvmRuF3m1Gc; sessionid=77683388474%3AqIbVM5VsvzuIMS%3A13%3AAYifPLk4x24iuNoVmYCWTzgv0AZZezKkhnoM8jKK-g; ds_user_id=77683388474; rur=\"HIL\\05477683388474\\0541792663599:01fe9b91181fa4bbaec438c2f3f2ccd3634de1665a8520f1722cbfc75a6c4fc8d970687c\"",
-#       "proxy": "",
-#       "status": "checking",
-#       "followers": 0,
-#       "following": 0,
-#       "hasAvatar": False,
-#       "posts": 0
-#     },
-#     {
-#       "username": "ruxece155",
-#       "password": "Instagram@123",
-#       "email": "ruxece155@gimpmail.com",
-#       "cookie": "csrftoken=RnIJ6uWmmDoooRP1p7k0Wn; datr=m6z4aDUEMOCXz4FmxJARDkwk; ig_did=88AD7F43-F411-49F8-B255-564CD7DEBEEB; wd=500x515; mid=aPismwALAAE7t_q3sSmMzwa2yk4K; sessionid=77692068567%3A6srqoXYskO4m3q%3A11%3AAYhq-e1pOK7Sol52dbtjDDSRQySg4BavxiFKszFlAw; ds_user_id=77692068567; rur=\"CCO\\05477692068567\\0541792663599:01feb2654713b785001cdfe20d77d464c974d7263ce048027f8c5f87d0ffd378f3f614c5\"",
-#       "proxy": "",
-#       "status": "checking",
-#       "followers": 0,
-#       "following": 0,
-#       "hasAvatar": False,
-#       "posts": 0
-#     }
-#   ],
-#   "config": {
-#     "threads": 5,
-#     "delay": 10,
-#     "followCount": 20,
-#     "uploadAvatar": True,
-#     "postStatus": True,
-#     "avatarFolder": "C:/Users/pc/Downloads/avatafbmoi/avatafbmoi",
-#     "statusFolder": "C:/Users/pc/Downloads/avatafbmoi/avatafbmoi",
-#     "statusList": [],
-#     "xpaths": {
-#       "firefox": "C:\\Program Files\\Mozilla Firefox\\firefox.exe",
-#       "geckodriver": "C:/Users/pc/Desktop/shin/reg_ig/firefox/geckodriver.exe"
-#     }
-#   }
-# }
-
-# NurtureAccount(data).thread_get_cookie()
