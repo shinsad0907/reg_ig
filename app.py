@@ -367,13 +367,17 @@ def export_accounts(accounts):
 @eel.expose
 def main_check_key(key):
     try:
-        with open(r'data/version_client.json', 'r', encoding="utf-8-sig") as f:
+        base_path = get_base_path()
+        version_file = os.path.join(base_path, 'data', 'version_client.json')
+        
+        with open(version_file, 'r', encoding="utf-8-sig") as f:
             version = json.load(f)
         
         statuscheckkey = Check_key().check_update(key, version['version_client'])
         
         if statuscheckkey['data']:
-            with open('data/key.json', "w", encoding="utf-8") as f:
+            key_file = os.path.join(base_path, 'data', 'key.json')
+            with open(key_file, "w", encoding="utf-8") as f:
                 json.dump({'key': key}, f, ensure_ascii=False, indent=4)
             eel.start('index.html', size=(1200, 800))
         
@@ -725,23 +729,27 @@ def start_nuoi(accounts, config):
 # === CHẠY ỨNG DỤNG ===
 if __name__ == '__main__':
     try:
-        # Tạo thư mục data nếu chưa có
-        Path('data').mkdir(exist_ok=True)
+        base_path = get_base_path()
+        data_dir = os.path.join(base_path, 'data')
+        os.makedirs(data_dir, exist_ok=True)
         
         # Kiểm tra key
         try:
-            with open(r'data/key.json', "r", encoding="utf-8") as f:
+            key_file = os.path.join(data_dir, 'key.json')
+            version_file = os.path.join(data_dir, 'version_client.json')
+            
+            with open(key_file, "r", encoding="utf-8") as f:
                 key_data = json.load(f)
             
-            with open(r'data/version_client.json', 'r', encoding="utf-8-sig") as versiondata:
+            with open(version_file, 'r', encoding="utf-8-sig") as versiondata:
                 version = json.load(versiondata)
             
-            status_checkkey = Check_key().check_update(key_data['key'], version)
+            status_checkkey = Check_key().check_update(key_data['key'], version['version_client'])
             
-            if status_checkkey['data'] ==  True:
+            if status_checkkey['data'] == True:
                 eel.start('index.html', size=(1200, 800), port=6060)
             else:
-                os.remove('data/key.json')
+                os.remove(key_file)
                 eel.start('key.html', size=(400, 600), port=6060)
         
         except FileNotFoundError:
