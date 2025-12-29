@@ -41,13 +41,18 @@ class Check_key:
                     if now < target_time:
                         print(f"✅ Key còn hạn đến {target_time}")
                         id_device = self.get_device_id()
+                        print(f"🔍 Device trong DB: {data['device']} (type: {type(data['device']).__name__})")
+                        print(f"🔍 Device máy: {id_device}")
+                        
                         if data['status'] == 'test':
                             return {'data': True}
-                        elif  id_device == data['device']:
+                        elif id_device == data['device']:
                             print(f"✅ Thiết bị hợp lệ: {id_device}")
                             return {'data': True}
-                        elif data['device'] == None:
+                        elif data['device'] is None or data['device'] == '':
                             self.supabase_client.table("Golike").update({"device": id_device}).eq("id", key).execute()
+                            print(f"✅ Device NULL/Empty, đã update device: {id_device}")
+                            return {'data': True}
                         else:
                             return {'data': False, 'status': 'Thiết bị không hợp lệ'}
                     else:
