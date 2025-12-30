@@ -62,3 +62,5 @@ class Check_key:
                     return {'data': False, 'status': 'Phiên bản tool đã cũ'}
 
         return {'data': False, 'status': 'Key không đúng'}
+
+# print(Check_key().get_device_id())
